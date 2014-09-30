@@ -137,15 +137,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static LPPOINT PointEx;
 	static int Tmp;
 	static int MouseDown=0;
-	static int shape;
+	static int shape,NullBrush;
 	static int PenWidth;
 	HPEN pen;
 	HBITMAP bufBitmap1,bufBitmap2,bufBitmapu,bufBitmapd;
 	//RECT screen;
-	HBRUSH brush;
-	static COLORREF clr;
+	//HBRUSH brush;
+	HGDIOBJ brush;
+	static COLORREF PenClr,BrushClr;
 	static HDC hdc1,hdc2,hdc,hdcu,hdcd;
 	static int scrbot,scrright;
+	static int poly;
+	static int polyAddFlag;
 	switch (message)
 	{
 	case WM_CREATE:
@@ -172,28 +175,55 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		r.top = 0;
 		r.right = scrright;
 		r.bottom = scrbot;
-		FillRect(hdc1, &r, brush);
+		Rectangle(hdc1,0,0,scrright,scrbot);
+		Rectangle(hdc2,0,0,scrright,scrbot);
+		Rectangle(hdcu,0,0,scrright,scrbot);
+		Rectangle(hdcd,0,0,scrright,scrbot);
+		/*FillRect(hdc1, &r, brush);
 		FillRect(hdc2, &r, brush);
 		FillRect(hdcu, &r, brush);
-		FillRect(hdcd, &r, brush);
+		FillRect(hdcd, &r, brush);*/
 		DeleteObject(brush);
+		NullBrush=1;
 		/*Rectangle(hdc1,0,0,scrright,scrbot);
 		Rectangle(hdc2,0,0,scrright,scrbot);*/
 		SelectObject(hdc1,pen);
 		SelectObject(hdc2,pen);
+		poly=0;
+		polyAddFlag=0;
 		break;
 	case WM_LBUTTONDOWN:
 		if (shape==0)
 			break;
-		xEx=LOWORD(lParam);
-		yEx=HIWORD(lParam);
+		if (poly==0)
+		{
+			xEx=LOWORD(lParam);
+			yEx=HIWORD(lParam);
+		}
+		else
+		{
+			polyAddFlag=1;
+		}
 		MouseDown=1;
 		BitBlt(hdcd,0,0,scrright,scrbot,hdc2,0,0,SRCCOPY);
 		break;
 	case WM_LBUTTONUP:
-		if (shape==2)
+		if (shape==5)
 		{
-
+			if (polyAddFlag==1)
+			{
+				pen = CreatePen(PS_SOLID,PenWidth,PenClr);
+				SelectObject(hdc2,pen);
+				BitBlt(hdc2,0,0,scrright,scrbot,hdcd,0,0,SRCCOPY);
+				MoveToEx(hdc2,xEx,yEx,PointEx);
+				LineTo(hdc2,LOWORD(lParam),HIWORD(lParam));
+				BitBlt(hdc1,0,0,scrright,scrbot,hdc2,0,0,SRCCOPY);
+		//		ReleaseDC(hWnd, hdcT);
+				InvalidateRect(hWnd,NULL,FALSE);
+				DeleteObject(pen);
+			}
+			xEx=LOWORD(lParam);
+			yEx=HIWORD(lParam);
 		}
 		MouseDown=0;
 		BitBlt(hdcu,0,0,scrright,scrbot,hdc2,0,0,SRCCOPY);
@@ -205,10 +235,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (MouseDown)
 		{
 		//	hdcT=GetDC(hWnd);
+		poly=0;
 		switch (shape)
 		{
 		case 1:
-			pen = CreatePen(PS_SOLID,PenWidth,clr);
+			pen = CreatePen(PS_SOLID,PenWidth,PenClr);
 			SelectObject(hdc2,pen);
 			MoveToEx(hdc2,xEx,yEx,PointEx);
 			LineTo(hdc2,x,y);
@@ -220,7 +251,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			DeleteObject(pen);
 			break;
 		case 2:
-			pen = CreatePen(PS_SOLID,PenWidth,clr);
+			pen = CreatePen(PS_SOLID,PenWidth,PenClr);
 			SelectObject(hdc2,pen);
 			BitBlt(hdc2,0,0,scrright,scrbot,hdcd,0,0,SRCCOPY);
 			MoveToEx(hdc2,xEx,yEx,PointEx);
@@ -231,27 +262,69 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			DeleteObject(pen);
 			break;
 		case 3:
-			pen = CreatePen(PS_SOLID,PenWidth,clr);
+			pen = CreatePen(PS_SOLID,PenWidth,PenClr);
+			if (NullBrush==0)
+			{
+				brush = CreateSolidBrush(BrushClr);
+				SelectObject(hdc2,brush);
+			}
+			else
+			{
+				brush = GetStockObject(NULL_BRUSH);
+				SelectObject(hdc2,brush);
+			}
 		//	brush = CreateSolidBrush();
 			SelectObject(hdc2,pen);
 			BitBlt(hdc2,0,0,scrright,scrbot,hdcd,0,0,SRCCOPY);
-			SelectObject(hdc2, GetStockObject(NULL_BRUSH));
+			//SelectObject(hdc2, GetStockObject(NULL_BRUSH));
 			Rectangle(hdc2,xEx,yEx,x,y);
 			BitBlt(hdc1,0,0,scrright,scrbot,hdc2,0,0,SRCCOPY);
 		//	ReleaseDC(hWnd, hdcT);
 			InvalidateRect(hWnd,NULL,FALSE);
+			DeleteObject(brush);
 			DeleteObject(pen);
 			break;
 		case 4:
-			pen = CreatePen(PS_SOLID,PenWidth,clr);
-		//	brush = CreateSolidBrush();
+			pen = CreatePen(PS_SOLID,PenWidth,PenClr);
+			if (NullBrush==0)
+				brush = CreateSolidBrush(BrushClr);
+			else
+				brush = GetStockObject(NULL_BRUSH);
+			SelectObject(hdc2,brush);
 			SelectObject(hdc2,pen);
 			BitBlt(hdc2,0,0,scrright,scrbot,hdcd,0,0,SRCCOPY);
-			SelectObject(hdc2, GetStockObject(NULL_BRUSH));
+			//SelectObject(hdc2, GetStockObject(NULL_BRUSH));
 			Ellipse(hdc2,xEx,yEx,x,y);
 			BitBlt(hdc1,0,0,scrright,scrbot,hdc2,0,0,SRCCOPY);
 		//	ReleaseDC(hWnd, hdcT);
 			InvalidateRect(hWnd,NULL,FALSE);
+			DeleteObject(brush);
+			DeleteObject(pen);
+			break;
+		case 5:
+			poly = 1;
+			pen = CreatePen(PS_SOLID,PenWidth,PenClr);
+			SelectObject(hdc2,pen);
+			BitBlt(hdc2,0,0,scrright,scrbot,hdcd,0,0,SRCCOPY);
+			MoveToEx(hdc2,xEx,yEx,PointEx);
+			LineTo(hdc2,x,y);
+			BitBlt(hdc1,0,0,scrright,scrbot,hdc2,0,0,SRCCOPY);
+		//	ReleaseDC(hWnd, hdcT);
+			InvalidateRect(hWnd,NULL,FALSE);
+			DeleteObject(pen);
+			polyAddFlag=0;
+			break;
+		case 6:
+			pen = CreatePen(PS_SOLID,1,RGB(255,255,255));
+			brush = CreateSolidBrush(RGB(255,255,255));
+			SelectObject(hdc2,brush);
+			SelectObject(hdc2,pen);
+			//BitBlt(hdc2,0,0,scrright,scrbot,hdcd,0,0,SRCCOPY);
+			Rectangle(hdc2,x-5,y-5,x+5,y+5);
+			BitBlt(hdc1,0,0,scrright,scrbot,hdc2,0,0,SRCCOPY);
+		//	ReleaseDC(hWnd, hdcT);
+			InvalidateRect(hWnd,NULL,FALSE);
+			DeleteObject(brush);
 			DeleteObject(pen);
 			break;
 		}
@@ -264,6 +337,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		wmId    = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
 		// Parse the menu selections:
+		poly=0;
 		switch (wmId)
 		{
 		case IDM_ABOUT:
@@ -283,6 +357,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case ID_SHAPES_ELLIPSE:
 			shape=4;
+			break;
+		case ID_SHAPES_POLYLINE:
+			shape=5;
 			break;
 		case ID_WIDTHOFLINE_1:
 //			DeleteObject(pen);
@@ -309,7 +386,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			PenWidth=6;
 			break;
 		case ID_COLOR_SELECTCOLOR:
-			GetPenColor(hWnd, &clr);
+			GetPenColor(hWnd, &PenClr);
+			break;
+		case ID_COLOR_SELECTBRUSHCOLOR:
+			GetPenColor(hWnd, &BrushClr);
+			break;
+		case ID_COLOR_WITHOUTBRUSH:
+			NullBrush=1;
+			break;
+		case ID_COLOR_WITHBRUSH:
+			NullBrush=0;
+			break;
+		case ID_EDIT_ERASER:
+			shape=6;
 			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);

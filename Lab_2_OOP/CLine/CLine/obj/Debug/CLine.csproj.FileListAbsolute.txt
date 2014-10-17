@@ -1,0 +1,7 @@
+E:\5 сем\ООП\СРАНОЕ TMP\CLine\CLine\obj\Debug\CLine.csprojResolveAssemblyReference.cache
+E:\5 сем\ООП\СРАНОЕ TMP\CLine\CLine\bin\Debug\CLine.dll
+E:\5 сем\ООП\СРАНОЕ TMP\CLine\CLine\bin\Debug\CLine.pdb
+E:\5 сем\ООП\СРАНОЕ TMP\CLine\CLine\bin\Debug\ClassLibrary1.dll
+E:\5 сем\ООП\СРАНОЕ TMP\CLine\CLine\bin\Debug\ClassLibrary1.pdb
+E:\5 сем\ООП\СРАНОЕ TMP\CLine\CLine\obj\Debug\CLine.dll
+E:\5 сем\ООП\СРАНОЕ TMP\CLine\CLine\obj\Debug\CLine.pdb

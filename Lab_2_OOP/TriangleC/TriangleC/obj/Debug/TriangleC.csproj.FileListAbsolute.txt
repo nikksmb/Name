@@ -1,0 +1,7 @@
+E:\5 сем\ООП\СРАНОЕ TMP\TriangleC\TriangleC\bin\Debug\TriangleC.dll
+E:\5 сем\ООП\СРАНОЕ TMP\TriangleC\TriangleC\bin\Debug\TriangleC.pdb
+E:\5 сем\ООП\СРАНОЕ TMP\TriangleC\TriangleC\bin\Debug\ClassLibrary1.dll
+E:\5 сем\ООП\СРАНОЕ TMP\TriangleC\TriangleC\bin\Debug\ClassLibrary1.pdb
+E:\5 сем\ООП\СРАНОЕ TMP\TriangleC\TriangleC\obj\Debug\TriangleC.csprojResolveAssemblyReference.cache
+E:\5 сем\ООП\СРАНОЕ TMP\TriangleC\TriangleC\obj\Debug\TriangleC.dll
+E:\5 сем\ООП\СРАНОЕ TMP\TriangleC\TriangleC\obj\Debug\TriangleC.pdb

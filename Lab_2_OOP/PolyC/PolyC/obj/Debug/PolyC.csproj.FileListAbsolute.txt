@@ -5,3 +5,10 @@ E:\5 сем\ООП\СРАНОЕ TMP\PolyC\PolyC\bin\Debug\ClassLibrary1.pdb
 E:\5 сем\ООП\СРАНОЕ TMP\PolyC\PolyC\obj\Debug\PolyC.csprojResolveAssemblyReference.cache
 E:\5 сем\ООП\СРАНОЕ TMP\PolyC\PolyC\obj\Debug\PolyC.dll
 E:\5 сем\ООП\СРАНОЕ TMP\PolyC\PolyC\obj\Debug\PolyC.pdb
+E:\5 сем\ООП\Laba2\PolyC\PolyC\bin\Debug\PolyC.dll
+E:\5 сем\ООП\Laba2\PolyC\PolyC\bin\Debug\PolyC.pdb
+E:\5 сем\ООП\Laba2\PolyC\PolyC\bin\Debug\ClassLibrary1.dll
+E:\5 сем\ООП\Laba2\PolyC\PolyC\bin\Debug\ClassLibrary1.pdb
+E:\5 сем\ООП\Laba2\PolyC\PolyC\obj\Debug\PolyC.csprojResolveAssemblyReference.cache
+E:\5 сем\ООП\Laba2\PolyC\PolyC\obj\Debug\PolyC.dll
+E:\5 сем\ООП\Laba2\PolyC\PolyC\obj\Debug\PolyC.pdb

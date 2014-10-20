@@ -11,16 +11,26 @@ using System.Windows.Forms;
     public class LineC:ShapeC
     {
         Point First, Second;
-        public LineC(Point A, Point B)
+
+        public LineC(List<Point> ListP)
         {
-            First = A;
-            Second = B;
+            if (ListP.Count > 1)
+            {
+                First = ListP[0];
+                Second = ListP[1];
+                Ready = true;
+            }
+            else
+            {
+                Ready = false;
+            }
         }
         public override void  Draw(Graphics gr)
         {
-         /*   System.Drawing.Pen myPen;
-            myPen = new System.Drawing.Pen(System.Drawing.Color.Red);*/
-            gr.DrawLine(Pens.Green, First, Second);
+            if (Ready)
+            {
+                gr.DrawLine(Pens.Green, First, Second);
+            }
         }
     }
 

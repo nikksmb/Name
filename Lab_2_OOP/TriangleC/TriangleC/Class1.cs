@@ -12,21 +12,27 @@ using System.Windows.Forms;
 public class TriangleC : ShapeC
 {
     protected Point A, B, C;
-    public TriangleC(Point a,Point b,Point c)
+    public TriangleC(List<Point> ListP)
     {
-        A = a;
-        B = b;
-        C = c;
+        if (ListP.Count > 2)
+        {
+            A = ListP[0];
+            B = ListP[1];
+            C = ListP[2];
+            Ready = true;
+        }
+        else
+        {
+            Ready = false;
+        }
     }
     public override void Draw(Graphics gr)
     {
-        //System.Drawing.Pen myPen;
-        //myPen = new System.Drawing.Pen(System.Drawing.Color.Red);
-        //System.Drawing.Graphics formGraphics = Form.ActiveForm.CreateGraphics();
-        gr.DrawLine(Pens.Green, A, B);
-        gr.DrawLine(Pens.Green, B, C);
-        gr.DrawLine(Pens.Green, C, A);
-        //myPen.Dispose();
-        //formGraphics.Dispose();
+        if (Ready)
+        {
+            gr.DrawLine(Pens.Green, A, B);
+            gr.DrawLine(Pens.Green, B, C);
+            gr.DrawLine(Pens.Green, C, A);
+        }
     }
 }

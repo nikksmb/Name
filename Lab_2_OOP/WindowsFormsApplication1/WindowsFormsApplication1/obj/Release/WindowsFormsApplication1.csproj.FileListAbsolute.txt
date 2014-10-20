@@ -1,0 +1,10 @@
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\bin\Release\WindowsFormsApplication1.exe.config
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\bin\Release\WindowsFormsApplication1.exe
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\bin\Release\WindowsFormsApplication1.pdb
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\bin\Release\ClassLibrary1.dll
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\bin\Release\ClassLibrary1.pdb
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.Form1.resources
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.Properties.Resources.resources
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.csproj.GenerateResource.Cache
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.exe
+E:\5 сем\ООП\Laba2\WindowsFormsApplication1\WindowsFormsApplication1\obj\Release\WindowsFormsApplication1.pdb

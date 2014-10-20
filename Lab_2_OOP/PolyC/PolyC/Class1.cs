@@ -10,26 +10,32 @@ using System.Windows.Forms;
 
 public class PolyC:ShapeC
 {
-    protected List<int> ListOfPoints;
-    public PolyC(List<int> ListP)
+    protected List<Point> ListOfPoints;
+    public PolyC(List<Point> ListP)
     {
-        ListOfPoints = new List<int>();
-        ListOfPoints = ListP;
+        if (ListP.Count > 1)
+        {
+            ListOfPoints = new List<Point>();
+            ListOfPoints = ListP;
+            Ready = true;
+        }
+        else
+        {
+            Ready = false;
+        }
     }
     public override void Draw(Graphics gr)
     {
-        int count=ListOfPoints.Count;
-        int i; 
-        //System.Drawing.Pen myPen;
-        //myPen = new System.Drawing.Pen(System.Drawing.Color.Red);
-        //System.Drawing.Graphics formGraphics = Form.ActiveForm.CreateGraphics();
-        for (i=0;i<count-3;i=i+2)
+        if (Ready)
         {
-                gr.DrawLine(Pens.Green, ListOfPoints[i], ListOfPoints[i+1], ListOfPoints[i+2], ListOfPoints[i+3]);
+            int count = ListOfPoints.Count;
+            int i;
+            for (i = 0; i < count - 1; i = i + 1)
+            {
+                gr.DrawLine(Pens.Green, ListOfPoints[i], ListOfPoints[i + 1]);
+            }
+            gr.DrawLine(Pens.Green, ListOfPoints[0], ListOfPoints[i]);
         }
-        gr.DrawLine(Pens.Green, ListOfPoints[0], ListOfPoints[1], ListOfPoints[i + 0], ListOfPoints[i + 1]);
-        //myPen.Dispose();
-        //formGraphics.Dispose();
     }
 }
 

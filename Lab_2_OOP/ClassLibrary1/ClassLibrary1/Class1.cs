@@ -11,5 +11,6 @@ using System.Windows.Forms;
 
     public abstract class ShapeC
     {
+        protected bool Ready;
         public abstract void Draw(Graphics gr);
     }

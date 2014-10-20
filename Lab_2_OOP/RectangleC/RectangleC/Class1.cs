@@ -11,22 +11,43 @@ using System.Windows.Forms;
 
     public class RectangleC:ShapeC
     {
-       // private int x1, y1, x2, y2;
         protected int Left, Top, Right, Bottom;
-        public RectangleC(int left, int top, int right, int bottom)
+        public RectangleC(List<Point> ListP)
         {
-            Left = left;
-            Top = top;
-            Right = right;
-            Bottom = bottom;
+            if (ListP.Count > 1)
+            {
+                if (ListP[0].X > ListP[1].X)
+                {
+                    Left = ListP[1].X;
+                    Right = ListP[0].X - Left;
+                }
+                else
+                {
+                    Left = ListP[0].X;
+                    Right = ListP[1].X - Left;
+                }
+                if (ListP[0].Y > ListP[1].Y)
+                {
+                    Top = ListP[1].Y;
+                    Bottom = ListP[0].Y - Top;
+                }
+                else
+                {
+                    Top = ListP[0].Y;
+                    Bottom = ListP[1].Y - Top;
+                }
+                Ready = true;
+            }
+            else
+            {
+                Ready = false;
+            }
         }
         public override void Draw(Graphics gr)
         {
-            //System.Drawing.Pen myPen;
-            //myPen = new System.Drawing.Pen(System.Drawing.Color.Red);
-            //System.Drawing.Graphics formGraphics = Form.ActiveForm.CreateGraphics();
-            gr.DrawRectangle(Pens.Green, Left, Top, Right, Bottom);
-            //myPen.Dispose();
-            //formGraphics.Dispose();
+            if (Ready)
+            {
+                gr.DrawRectangle(Pens.Green, Left, Top, Right, Bottom);
+            }
         }
     }

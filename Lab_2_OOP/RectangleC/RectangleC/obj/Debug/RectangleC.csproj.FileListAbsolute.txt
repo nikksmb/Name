@@ -5,3 +5,10 @@ E:\5 сем\ООП\СРАНОЕ TMP\RectangleC\RectangleC\bin\Debug\ClassLibrary
 E:\5 сем\ООП\СРАНОЕ TMP\RectangleC\RectangleC\bin\Debug\ClassLibrary1.pdb
 E:\5 сем\ООП\СРАНОЕ TMP\RectangleC\RectangleC\obj\Debug\RectangleC.dll
 E:\5 сем\ООП\СРАНОЕ TMP\RectangleC\RectangleC\obj\Debug\RectangleC.pdb
+E:\5 сем\ООП\Laba2\RectangleC\RectangleC\bin\Debug\RectangleC.dll
+E:\5 сем\ООП\Laba2\RectangleC\RectangleC\bin\Debug\RectangleC.pdb
+E:\5 сем\ООП\Laba2\RectangleC\RectangleC\bin\Debug\ClassLibrary1.dll
+E:\5 сем\ООП\Laba2\RectangleC\RectangleC\bin\Debug\ClassLibrary1.pdb
+E:\5 сем\ООП\Laba2\RectangleC\RectangleC\obj\Debug\RectangleC.csprojResolveAssemblyReference.cache
+E:\5 сем\ООП\Laba2\RectangleC\RectangleC\obj\Debug\RectangleC.dll
+E:\5 сем\ООП\Laba2\RectangleC\RectangleC\obj\Debug\RectangleC.pdb

@@ -5,3 +5,10 @@ E:\5 сем\ООП\СРАНОЕ TMP\EllipseC\EllipseC\bin\Debug\ClassLibrary1.pd
 E:\5 сем\ООП\СРАНОЕ TMP\EllipseC\EllipseC\obj\Debug\EllipseC.csprojResolveAssemblyReference.cache
 E:\5 сем\ООП\СРАНОЕ TMP\EllipseC\EllipseC\obj\Debug\EllipseC.dll
 E:\5 сем\ООП\СРАНОЕ TMP\EllipseC\EllipseC\obj\Debug\EllipseC.pdb
+E:\5 сем\ООП\Laba2\EllipseC\EllipseC\bin\Debug\EllipseC.dll
+E:\5 сем\ООП\Laba2\EllipseC\EllipseC\bin\Debug\EllipseC.pdb
+E:\5 сем\ООП\Laba2\EllipseC\EllipseC\bin\Debug\ClassLibrary1.dll
+E:\5 сем\ООП\Laba2\EllipseC\EllipseC\bin\Debug\ClassLibrary1.pdb
+E:\5 сем\ООП\Laba2\EllipseC\EllipseC\obj\Debug\EllipseC.csprojResolveAssemblyReference.cache
+E:\5 сем\ООП\Laba2\EllipseC\EllipseC\obj\Debug\EllipseC.dll
+E:\5 сем\ООП\Laba2\EllipseC\EllipseC\obj\Debug\EllipseC.pdb

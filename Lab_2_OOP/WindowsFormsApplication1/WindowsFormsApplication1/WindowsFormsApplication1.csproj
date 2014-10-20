@@ -32,20 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ClassLibrary1">
+    <Reference Include="ClassLibrary1, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\ClassLibrary1\ClassLibrary1\bin\Debug\ClassLibrary1.dll</HintPath>
-    </Reference>
-    <Reference Include="CLine">
-      <HintPath>..\..\CLine\CLine\bin\Debug\CLine.dll</HintPath>
-    </Reference>
-    <Reference Include="EllipseC">
-      <HintPath>..\..\EllipseC\EllipseC\bin\Debug\EllipseC.dll</HintPath>
-    </Reference>
-    <Reference Include="PolyC">
-      <HintPath>..\..\PolyC\PolyC\bin\Debug\PolyC.dll</HintPath>
-    </Reference>
-    <Reference Include="RectangleC">
-      <HintPath>..\..\RectangleC\RectangleC\bin\Debug\RectangleC.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -57,9 +46,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="TriangleC">
-      <HintPath>..\..\TriangleC\TriangleC\bin\Debug\TriangleC.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Form1.cs">

@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{AF8609D6-2E26-421A-9F27-9B8189713686}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>EnochianChess</RootNamespace>
+    <AssemblyName>EnochianChess</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="GameForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GameForm.Designer.cs">
+      <DependentUpon>GameForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MenuForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MenuForm.Designer.cs">
+      <DependentUpon>MenuForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="GameForm.resx">
+      <DependentUpon>GameForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MenuForm.resx">
+      <DependentUpon>MenuForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Background.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ActiveButtonBackground.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Button.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowHorse.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowKing.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowOfic.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowQueen.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowTower.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackHorse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackKing.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackOficer.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackPawnHorse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackPawnOficer.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackPawnQueen.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackPawnTower.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackQueen.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackTower.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlueHorse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlueKing.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlueOficer.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BluePawnHorse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BluePawnOficer.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BluePawnQueen.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BluePawnTower.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlueQueen.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlueTower.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedHorse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedKing.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedOficer.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedPawnHorse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedPawnOficer.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedPawnQueen.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedPawnTower.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedQueen.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedTower.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowHorse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowKing.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowOficer.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowPawnHorse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowPawnOficer.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowPawnQueen.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowPawnTower.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowQueen.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowTower.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IconA.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ButtonGray.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ButtonGreen.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ButtonRed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ButtonYellow.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

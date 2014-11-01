@@ -1,0 +1,10 @@
+E:\5 сем\Курсач\EnochianChess\EnochianChess\bin\Debug\EnochianChess.exe.config
+E:\5 сем\Курсач\EnochianChess\EnochianChess\bin\Debug\EnochianChess.exe
+E:\5 сем\Курсач\EnochianChess\EnochianChess\bin\Debug\EnochianChess.pdb
+E:\5 сем\Курсач\EnochianChess\EnochianChess\obj\Debug\EnochianChess.csprojResolveAssemblyReference.cache
+E:\5 сем\Курсач\EnochianChess\EnochianChess\obj\Debug\EnochianChess.MenuForm.resources
+E:\5 сем\Курсач\EnochianChess\EnochianChess\obj\Debug\EnochianChess.Properties.Resources.resources
+E:\5 сем\Курсач\EnochianChess\EnochianChess\obj\Debug\EnochianChess.csproj.GenerateResource.Cache
+E:\5 сем\Курсач\EnochianChess\EnochianChess\obj\Debug\EnochianChess.exe
+E:\5 сем\Курсач\EnochianChess\EnochianChess\obj\Debug\EnochianChess.pdb
+E:\5 сем\Курсач\EnochianChess\EnochianChess\obj\Debug\EnochianChess.GameForm.resources

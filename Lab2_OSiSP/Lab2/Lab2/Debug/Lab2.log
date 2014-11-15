@@ -1,0 +1,19 @@
+﻿Build started 15.11.2014 1:15:10.
+     1>Project "E:\5 сем\ОСиСП\Lab2\Lab2\Lab2.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"stdafx.h" /Fp"Debug\Lab2.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\Lab2.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Lab2.cpp
+         Lab2.cpp
+     1>e:\5 сем\осисп\lab2\lab2\lab2.cpp(109): error C2143: syntax error : missing ';' before '<'
+     1>e:\5 сем\осисп\lab2\lab2\lab2.cpp(109): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+     1>e:\5 сем\осисп\lab2\lab2\lab2.cpp(109): error C2238: unexpected token(s) preceding ';'
+     1>e:\5 сем\осисп\lab2\lab2\lab2.cpp(127): error C2143: syntax error : missing ';' before '<'
+     1>e:\5 сем\осисп\lab2\lab2\lab2.cpp(127): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+     1>e:\5 сем\осисп\lab2\lab2\lab2.cpp(127): error C2039: 'queueTasks' : is not a member of 'ThreadPool'
+                 e:\5 сем\осисп\lab2\lab2\lab2.cpp(82) : see declaration of 'ThreadPool'
+     1>Done Building Project "E:\5 сем\ОСиСП\Lab2\Lab2\Lab2.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:13.29

@@ -27,7 +27,10 @@ namespace EnochianChess
         Properties.Resources.BlackPawnTower}};
 
 
-        static int arrangement = 0; 
+        static int arrangement = 0;
+
+        static Label[] labelGroup;
+        static Button[] buttonGroup;
 
         static int[, , ,] positionOfChessmen = new int[8, 4, 9, 2] {
         /*Air of Fire and of Earth*/
@@ -203,8 +206,8 @@ namespace EnochianChess
                 y = Y;
                 width = Width;
                 height = Height;
-                sizeOfCell = Width / 10;
-                sizeOfChessboard = width - x;
+                sizeOfCell = Math.Min(Width, Height) / 10;
+                sizeOfChessboard = Math.Min(width - x, height - y);
                 numberOfArrangement = arrangementNumber;
                 onceMakeFirstArrangement();
             }
@@ -223,6 +226,17 @@ namespace EnochianChess
                         k++;
                     }
                 }
+            }
+
+            public void resizeChessboard(int X, int Y, int Width, int Height)
+            {
+                x = X;
+                x = X;
+                y = Y;
+                width = Width;
+                height = Height;
+                sizeOfCell = Math.Min(Width,Height) / 10;
+                sizeOfChessboard = Math.Min(width - x,height-y);
             }
 
             public void drawChessmen()
@@ -306,7 +320,16 @@ namespace EnochianChess
 
         public GameForm()
         {
+
             InitializeComponent();
+
+
+            //creating array of objects for resizing
+            labelGroup = new Label[5] {label1, label2, label3, label4, label5 };
+            buttonGroup = new Button[2] { button1, button2 };
+
+            tableLayoutPanel1.SizeChanged += GameForm_ResizeEnd;
+
 
             //Bitmap btm = Properties.Resources.YellowKing;
             //btm.MakeTransparent(Color.White);
@@ -421,9 +444,11 @@ namespace EnochianChess
 
         }
 
+        Chessboard chessboard;
+
         private void новаяToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Chessboard chessboard;
+            
             //if (pictureBox1.Image != null)
                 initializePictureBox(pictureBox1);
             
@@ -483,7 +508,7 @@ namespace EnochianChess
                     label4.Text = "Fire of Fire and of Earth";
                     break;
                 case 7:
-                    label4.Text = "Water of Fire and oof Earth";
+                    label4.Text = "Water of Fire and of Earth";
                     break;
             }
         }
@@ -491,6 +516,32 @@ namespace EnochianChess
         private void clearToolStripMenuItem_Click(object sender, EventArgs e)
         {
             initializePictureBox(pictureBox1);
+        }
+
+        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void GameForm_ResizeEnd(object sender, EventArgs e)
+        {
+            foreach (Label label in labelGroup)
+            {
+                label.Font = new Font(label.Font.Name, Math.Min(label.Height / 3, label.Width / 3), FontStyle.Regular);
+            }
+
+            foreach (Button button in buttonGroup)
+            {
+                button.Font = new Font(button.Font.Name, Math.Min(button.Height / 6, button.Width / 6), FontStyle.Regular);
+            }
+            tableLayoutPanel1.Width = 9 * GameForm.ActiveForm.Width / 10;
+            tableLayoutPanel1.Height = 9 * GameForm.ActiveForm.Height / 10 - menuStrip1.Height * 2;
+            if (chessboard != null)
+            {
+                chessboard.resizeChessboard(0, 0, pictureBox1.Width, pictureBox1.Height);
+                pictureBox1.Image = chessboard.showChessboard();
+                pictureBox1.BackgroundImageLayout = ImageLayout.Stretch;
+            }
         }
     }
 }

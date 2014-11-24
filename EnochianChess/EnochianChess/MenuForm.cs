@@ -20,13 +20,17 @@ namespace EnochianChess
 
         private void button1_MouseEnter(object sender, EventArgs e)
         {
-            (sender as Button).BackgroundImage = Properties.Resources.ButtonGreen;
+            Bitmap bitmap = Properties.Resources.ButtonGreen;
+            (sender as Button).BackgroundImage = bitmap;
             (sender as Button).BackgroundImageLayout = ImageLayout.Stretch;
         }
 
         private void button1_MouseLeave(object sender, EventArgs e)
         {
+            Bitmap bitmap;
+            bitmap = (Bitmap)(sender as Button).BackgroundImage;
             (sender as Button).BackgroundImage = null;
+            bitmap.Dispose();
         }
 
         private void button2_Click(object sender, EventArgs e)

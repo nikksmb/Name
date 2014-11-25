@@ -103,8 +103,9 @@ public:
 		threadsSemaphore = (HANDLE*)malloc(sizeof(HANDLE)*(maxCountOfThreads+1));
 		isThreadReady = (bool*)malloc(sizeof(bool)*(maxCountOfThreads+1));
 
-		masterThread = CreateThread(NULL, 0, masterThreadFunction, (LPVOID)(maxCountOfThreads), 0, NULL);
+		masterThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)masterThreadFunction, (LPVOID)(maxCountOfThreads), 0, NULL);
 		masterThreadSemaphore = CreateSemaphore(NULL, maxCountOfThreads, maxCountOfThreads, NULL);
+		masterThreadSemaphoreComplete = CreateSemaphore(NULL, 0, 1, NULL);
 		
 		
 		printLog("Master thread has been created.\n");
@@ -123,14 +124,20 @@ public:
 		for (int i = 0; i < maxCountOfThreads; i++)
 		{
 			addTask(&fin);
-		}
+		} 
 		WaitForMultipleObjects(maxCountOfThreads,threadsHandle,true,10000);
-		masterThreadExists = false;
-		WaitForSingleObject(masterThread,15000);
 		free(threadsHandle);
-	//	free(masterThread);
-
-		//wait for multiple, wait for master
+		for (int i = 0; i < maxCountOfThreads; i++)
+        {
+			CloseHandle(threadsSemaphore[i]);
+	    }
+		free(threadsSemaphore);
+	//	free(&queueTasks);
+		EnterCriticalSection(&boolCriticalSection);
+		masterThreadExists = false;
+		LeaveCriticalSection(&boolCriticalSection);
+		WaitForSingleObject(masterThreadSemaphoreComplete, 5000);
+		CloseHandle(masterThread);
 	}
 
 	void addTask(function * f)
@@ -148,19 +155,24 @@ private:
 	static std::queue <function*> queueTasks;
 	static HANDLE * threadsSemaphore;
 	static HANDLE masterThreadSemaphore;
+	static HANDLE masterThreadSemaphoreComplete;
 	static bool * isThreadReady;
 	static bool masterThreadExists;
 
 	static DWORD WINAPI masterThreadFunction(LPVOID lParam)
 	{
-		int numberOfThread = (int) lParam;
+		int numberOfThread = maxCountOfThreads;
+		EnterCriticalSection(&boolCriticalSection);
 		masterThreadExists = true;
+		LeaveCriticalSection(&boolCriticalSection);
+		bool masterThread = true;
 		bool allBusy;
-		while (masterThreadExists)
+		while (masterThread)
 		{
 			if (WaitForSingleObject(masterThreadSemaphore, 1000) == WAIT_OBJECT_0)
 			{
 				allBusy = false;
+				EnterCriticalSection(&boolCriticalSection);
 				for (int i = 0; i < maxCountOfThreads; i++)
 				{
 					if (isThreadReady[i])
@@ -182,22 +194,32 @@ private:
 					}
 
 				}
-				if (allBusy)
+				LeaveCriticalSection(&boolCriticalSection);
+				EnterCriticalSection(&boolCriticalSection);
+				if (allBusy && masterThreadExists)
 				{
-					if (queueTasks.front()!=NULL)
+					EnterCriticalSection(&queueCriticalSection);
+					if (!queueTasks.empty())
 					{
-						printLog("All threads are busy, task will be ignored \n");
-						EnterCriticalSection(&queueCriticalSection);
 						if(queueTasks.front() != &fin)
 						{
+							printLog("All threads are busy, task will be ignored \n");
 							queueTasks.pop();
 						}
-						LeaveCriticalSection(&queueCriticalSection);
 					}
+					LeaveCriticalSection(&queueCriticalSection);
 				}
+				LeaveCriticalSection(&boolCriticalSection);
 			}
+			EnterCriticalSection(&boolCriticalSection);
+			if (!masterThreadExists)
+			{
+				masterThread = false;
+			}
+			LeaveCriticalSection(&boolCriticalSection);
 		}
 		printLog("Master thread terminated \n");
+		ReleaseSemaphore(masterThreadSemaphoreComplete, 1, NULL);
 		return 0;
 	}
 
@@ -258,9 +280,10 @@ HANDLE * ThreadPool::threadsHandle;
 HANDLE ThreadPool::masterThread;
 std::queue <function*> ThreadPool::queueTasks;
 HANDLE ThreadPool::masterThreadSemaphore;
+HANDLE ThreadPool::masterThreadSemaphoreComplete;
 HANDLE * ThreadPool::threadsSemaphore;
 bool * ThreadPool::isThreadReady;
-bool ThreadPool:: masterThreadExists;
+bool ThreadPool::masterThreadExists;
 
 
 int _tmain(int argc, _TCHAR* argv[])

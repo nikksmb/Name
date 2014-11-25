@@ -474,7 +474,7 @@ namespace EnochianChess
 
             //graphics
 
-            public void DrawChessmanOnChessboard(ref Bitmap chessboardBitmap, int x, int y, int cellSize)
+            public virtual void DrawChessmanOnChessboard(ref Bitmap chessboardBitmap, int x, int y, int cellSize)
             {
                 if (isInGame)
                 {
@@ -484,7 +484,7 @@ namespace EnochianChess
                 }
             }
 
-            public void DrawChessmanOnBitmap(ref Bitmap chessmanBitmap, int x, int y, int width, int height)
+            public virtual void DrawChessmanOnBitmap(ref Bitmap chessmanBitmap, int x, int y, int width, int height)
             {
                 if (isInGame)
                 {
@@ -529,7 +529,7 @@ namespace EnochianChess
 
             public abstract bool IsThatPossibleMove(int horizontal, int vertical);
 
-            public void MoveChessman(int horizontal, int vertical)
+            public virtual void MoveChessman(int horizontal, int vertical)
             {
                 chessboard.MakeThisCellUsual(this.horizontal, this.vertical);
                 this.horizontal = horizontal;
@@ -539,15 +539,35 @@ namespace EnochianChess
 
             public abstract bool IsThatPossibleAttack(int horizontal, int vertical);
 
-            public void AttackChessmanOnCoordinates(int horizontal, int vertical)
+            public virtual void AttackChessmanOnCoordinates(int horizontal, int vertical)
             {
+                //dopilit'
+                //string of state
+
+                //problem
                 Chessman attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
+                while (attackedChessman != null)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                    attackedChessman.KillingBy(this.player);
+                    attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
+                }
                 chessboard.MakeThisCellUsual(this.horizontal, this.vertical);
-                chessboard.MakeThisCellUsual(horizontal, vertical);
                 this.horizontal = horizontal;
                 this.vertical = vertical;
                 chessboard.DrawChessman(this);
-                attackedChessman.KillingBy(this.player);
+            }
+
+            public bool IsThatEnemyChessman(Players player)
+            {
+                bool result = true;
+                if (this.player == player)
+                    return false;
+
+                int sum = (int)this.player + (int)player;
+                result = ((sum != 1) && (sum != 5));
+
+                return result;
             }
 
             public void KillingBy(Players player)
@@ -560,7 +580,7 @@ namespace EnochianChess
                 
             }
 
-            public Point GetCoordinates()
+            public virtual Point GetCoordinates()
             {
                 Point result = new Point();
                 result.X = horizontal;
@@ -573,12 +593,93 @@ namespace EnochianChess
         //KING
         public class King : Chessman
         {
+            //specific fields are not exist
+            protected int graphHorizontal;
+            protected int graphVertical;
 
             public King(ChessmenParameters chessmanParameters, Chessboard chessboard)
                 : base(chessmanParameters, chessboard)
             {
+                if (horizontal == 9)
+                {
+                    horizontal = 8;
+                    graphHorizontal = 9;
+                }
+                else
+                {
+                    if (horizontal == 0)
+                    {
+                        horizontal = 1;
+                        graphHorizontal = 0;
+                    }
+                    else
+                    {
+                        graphHorizontal = horizontal;
+                    }
+                }
+                
+                if (vertical == 9)
+                {
+                    vertical = 8;
+                    graphVertical = 9;
+                }
+                else
+                {
+                    if (vertical == 0)
+                    {
+                        vertical = 1;
+                        graphVertical = 0;
+                    }
+                    else
+                    {
+                        graphVertical = vertical;
+                    }
+                }
+                
                 //dopilit' 
                 //real coordinates and specific fields
+            }
+
+            //graphics spec
+            public override void DrawChessmanOnChessboard(ref Bitmap chessboardBitmap, int x, int y, int cellSize)
+            {
+                if (isInGame)
+                {
+                    Graphics chessboardGraphics = Graphics.FromImage(chessboardBitmap);
+                    chessboardGraphics.DrawImage(imageOfChessman, x + cellSize * graphHorizontal + cellSize / 6, y + cellSize * graphVertical + cellSize / 10, 2 * cellSize / 3, 4 * cellSize / 5);
+                    chessboardGraphics.Dispose();
+                }
+            }
+
+            //public override Point GetCoordinates()
+            //{
+            //    Point result = new Point();
+            //    result.X = graphHorizontal;
+            //    result.Y = graphVertical;
+            //    return result;
+            //}
+
+            public override void MoveChessman(int horizontal, int vertical)
+            {
+                chessboard.MakeThisCellUsual(this.graphHorizontal, this.graphVertical);
+                this.horizontal = horizontal;
+                this.vertical = vertical;
+                graphHorizontal = horizontal;
+                graphVertical = vertical;
+                chessboard.DrawChessman(this);
+            }
+
+            public override void AttackChessmanOnCoordinates(int horizontal, int vertical)
+            {
+                Chessman attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
+                chessboard.MakeThisCellUsual(this.graphHorizontal, this.graphVertical);
+                chessboard.MakeThisCellUsual(horizontal, vertical);
+                this.horizontal = horizontal;
+                this.vertical = vertical;
+                graphHorizontal = horizontal;
+                graphVertical = vertical;
+                chessboard.DrawChessman(this);
+                attackedChessman.KillingBy(this.player);
             }
 
             public override void ShowPossibleMovements(bool deselect)
@@ -586,11 +687,11 @@ namespace EnochianChess
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
-                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                    chessboard.MakeThisCellUsual(graphHorizontal, graphVertical);
                 }
                 else
                 {
-                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                    chessboard.MakeThisCellSelected(graphHorizontal, graphVertical);
                 }
                 chessboard.DrawChessman(this);
                 for (int i = -1; i<=1; i++)
@@ -645,7 +746,6 @@ namespace EnochianChess
             public override void ShowPossibleAttacks(bool deselect)
             {
                 int newHorizontal, newVertical;
-                bool enemy = true; //dopilit'
                 for (int i = -1; i <= 1; i++)
                 {
                     for (int j = -1; j <= 1; j++)
@@ -655,7 +755,7 @@ namespace EnochianChess
                         newVertical = this.vertical + j;
                         if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                             (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
-                            (enemy))
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                         {
                             if (deselect)
                             {
@@ -677,7 +777,6 @@ namespace EnochianChess
             {
                 bool result = false;
                 int newHorizontal, newVertical;
-                bool enemy = true; //dopilit'
                 for (int i = -1; i <= 1; i++)
                 {
                     for (int j = -1; j <= 1; j++)
@@ -686,7 +785,7 @@ namespace EnochianChess
                         newVertical = this.vertical + j;
                         if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                             (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
-                            (enemy))
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                         {
                             if ((newHorizontal == horizontal) && (newVertical == vertical))
                             {
@@ -713,23 +812,118 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                for (int i = -2; i <= 2; i+=2)
+                {
+                    for (int j = -2; j <= 2; j+=2)
+                    {
+                        newHorizontal = horizontal + i;
+                        newVertical = vertical + j;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+                            if (deselect)
+                            {
+                                chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                            }
+                            else
+                            {
+                                chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                            }
+
+                        }
+                    }
+                }
+
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
             {
-                bool result = true;
+                bool result = false;
+                int newHorizontal, newVertical;
+                for (int i = -2; i <= 2; i += 2)
+                {
+                    for (int j = -2; j <= 2; j += 2)
+                    {
+                        newHorizontal = this.horizontal + i;
+                        newVertical = this.vertical + j;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+                            if ((newHorizontal == horizontal) && (newVertical == vertical))
+                            {
+                                result = true;
 
+                                return result;
+                            }
+                        }
+                    }
+                }
                 return result;
             }
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                int newHorizontal, newVertical;
+                for (int i = -2; i <= 2; i += 2)
+                {
+                    for (int j = -2; j <= 2; j += 2)
+                        if (!((i == 0) && (j == 0)))
+                        {
+                            newHorizontal = this.horizontal + i;
+                            newVertical = this.vertical + j;
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                            {
+                                if (deselect)
+                                {
+                                    chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                }
+                                else
+                                {
+                                    chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                                }
+                                //refresh
+                                chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                            }
+                        }
+                }
+
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
             {
-                bool result = true;
+                bool result = false;
+                int newHorizontal, newVertical;
+                for (int i = -2; i <= 2; i += 2)
+                {
+                    for (int j = -2; j <= 2; j += 2)
+                    {
+                        newHorizontal = this.horizontal + i;
+                        newVertical = this.vertical + j;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                        {
+                            if ((newHorizontal == horizontal) && (newVertical == vertical))
+                            {
+                                result = true;
 
+                                return result;
+                            }
+                        }
+                    }
+                }
                 return result;
             }
         }
@@ -745,23 +939,161 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                for (int k = -1; k <= 1; k += 2)
+                {
+                    for (int j = -1; j <= 1; j += 2)
+                    {
+                        for (int i = 1; i <= 8; i++)
+                        {
+                            newHorizontal = horizontal + i * j * k;
+                            newVertical = vertical + i * j;
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                   (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                            {
+                                if (deselect)
+                                {
+                                    chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                }
+                                else
+                                {
+                                    chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
             {
-                bool result = true;
+                bool result = false;
+                int newHorizontal, newVertical;
+                for (int k = -1; k <= 1; k += 2)
+                {
+                    for (int j = -1; j <= 1; j += 2)
+                    {
+                        for (int i = 1; i <= 8; i++)
+                        {
+                            newHorizontal = this.horizontal + i * j * k;
+                            newVertical = this.vertical + i * j;
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                            {
+                                if ((newHorizontal == horizontal) && (newVertical == vertical))
+                                {
+                                    result = true;
 
+                                    return result;
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
                 return result;
             }
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                for (int k = -1; k <= 1; k += 2)
+                {
+                    for (int j = -1; j <= 1; j += 2)
+                    {
+                        for (int i = 1; i <= 8; i++)
+                        {
+                            newHorizontal = horizontal + i * j * k;
+                            newVertical = vertical + i * j;
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                   (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                            {
+
+                            }
+                            else
+                            {
+                                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                 (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                                 (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                                {
+                                    if (deselect)
+                                    {
+                                        chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                    }
+                                    else
+                                    {
+                                        chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                                    }
+                                    //refresh
+                                    chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
             {
-                bool result = true;
+                bool result = false;
+                int newHorizontal, newVertical;
+                for (int k = -1; k <= 1; k += 2)
+                {
+                    for (int j = -1; j <= 1; j += 2)
+                    {
+                        for (int i = 1; i <= 8; i++)
+                        {
+                            newHorizontal = this.horizontal + i * j * k;
+                            newVertical = this.vertical + i * j;
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                            {
 
+                            }
+                            else
+                            {
+                                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                                {
+                                    if ((newHorizontal == horizontal) && (newVertical == vertical))
+                                    {
+                                        result = true;
+
+                                        return result;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
                 return result;
             }
         }
@@ -777,23 +1109,163 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                for (int k = 0; k <= 1; k++)
+                {
+                    for (int i = -1; i <= 1; i += 2)
+                    {
+                        for (int j = -2; j <= 2; j += 4)
+                        {
+                            if (k == 0)
+                            {
+                                newHorizontal = horizontal + i;
+                                newVertical = vertical + j;
+                            }
+                            else
+                            {
+                                newHorizontal = horizontal + j;
+                                newVertical = vertical + i;
+                            }
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                            {
+                                if (deselect)
+                                {
+                                    chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                }
+                                else
+                                {
+                                    chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                                }
+
+                            }
+                        }
+                    }
+                }
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
             {
-                bool result = true;
+                bool result = false;
+                int newHorizontal, newVertical;
+                for (int k = 0; k <= 1; k++)
+                {
+                    for (int i = -1; i <= 1; i += 2)
+                    {
+                        for (int j = -2; j <= 2; j += 4)
+                        {
+                            if (k == 0)
+                            {
+                                newHorizontal = this.horizontal + i;
+                                newVertical = this.vertical + j;
+                            }
+                            else
+                            {
+                                newHorizontal = this.horizontal + j;
+                                newVertical = this.vertical + i;
+                            }
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                            {
+                                if ((newHorizontal == horizontal) && (newVertical == vertical))
+                                {
+                                    result = true;
 
+                                    return result;
+                                }
+                            }
+                        }
+                    }
+                }
                 return result;
             }
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                int newHorizontal, newVertical;
+                for (int k = 0; k <= 1; k++)
+                {
+                    for (int i = -1; i <= 1; i += 2)
+                    {
+                        for (int j = -2; j <= 2; j += 4)
+                        {
+                            if (!((i == 0) && (j == 0)))
+                            {
+                                if (k == 0)
+                                {
+                                    newHorizontal = this.horizontal + i;
+                                    newVertical = this.vertical + j;
+                                }
+                                else
+                                {
+                                    newHorizontal = this.horizontal + j;
+                                    newVertical = this.vertical + i;
+                                }
+                                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                    (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                                    (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                                {
+                                    if (deselect)
+                                    {
+                                        chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                    }
+                                    else
+                                    {
+                                        chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                                    }
+                                    //refresh
+                                    chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                                }
+                            }
+                        }
+                    }
+
+                }
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
             {
-                bool result = true;
+                bool result = false;
+                int newHorizontal, newVertical;
+                for (int k = 0; k <= 1; k++)
+                {
+                    for (int i = -1; i <= 1; i += 2)
+                    {
+                        for (int j = -2; j <= 2; j += 4)
+                        {
+                            if (k == 0)
+                            {
+                                newHorizontal = this.horizontal + i;
+                                newVertical = this.vertical + j;
+                            }
+                            else
+                            {
+                                newHorizontal = this.horizontal + j;
+                                newVertical = this.vertical + i;
+                            }
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                            {
+                                if ((newHorizontal == horizontal) && (newVertical == vertical))
+                                {
+                                    result = true;
 
+                                    return result;
+                                }
+                            }
+                        }
+                    }
+                }
                 return result;
             }
         }
@@ -809,23 +1281,254 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                for (int j = -1; j <= 1; j += 2)
+                {
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        newHorizontal = horizontal + i * j;
+                        newVertical = vertical;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                               (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+                            if (deselect)
+                            {
+                                chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                            }
+                            else
+                            {
+                                chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                for (int j = -1; j <= 1; j += 2)
+                {
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        newHorizontal = horizontal;
+                        newVertical = vertical + i * j;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                               (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+                            if (deselect)
+                            {
+                                chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                            }
+                            else
+                            {
+                                chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
             {
-                bool result = true;
+                bool result = false;
+                int newHorizontal, newVertical;
+                for (int j = -1; j <= 1; j+=2)
+                {
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        newHorizontal = this.horizontal + i * j;
+                        newVertical = this.vertical;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+                            if ((newHorizontal == horizontal) && (newVertical == vertical))
+                            {
+                                result = true;
 
+                                return result;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                for (int j = -1; j <= 1; j += 2)
+                {
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        newHorizontal = this.horizontal;
+                        newVertical = this.vertical + i * j;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+                            if ((newHorizontal == horizontal) && (newVertical == vertical))
+                            {
+                                result = true;
+
+                                return result;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
                 return result;
             }
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                for (int j = -1; j <= 1; j += 2)
+                {
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        newHorizontal = horizontal + i * j;
+                        newVertical = vertical;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                               (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+
+                        }
+                        else
+                        {
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                             (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                             (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                            {
+                                if (deselect)
+                                {
+                                    chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                }
+                                else
+                                {
+                                    chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                                }
+                                //refresh
+                                chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                            }
+                            break;
+                        }
+                    }
+                }
+                for (int j = -1; j <= 1; j += 2)
+                {
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        newHorizontal = horizontal;
+                        newVertical = vertical + i * j;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+
+                        }
+                        else
+                        {
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                             (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                             (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                            {
+                                if (deselect)
+                                {
+                                    chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                }
+                                else
+                                {
+                                    chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                                }
+                                //refresh
+                                chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                            }  
+                            break;
+                        }
+                    }
+                }
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
             {
-                bool result = true;
+                bool result = false;
+                int newHorizontal, newVertical;
+                for (int j = -1; j <= 1; j += 2)
+                {
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        newHorizontal = this.horizontal + i * j;
+                        newVertical = this.vertical;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
 
+                        }
+                        else
+                        {
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                            {
+                                if ((newHorizontal == horizontal) && (newVertical == vertical))
+                                {
+                                    result = true;
+
+                                    return result;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                for (int j = -1; j <= 1; j += 2)
+                {
+                    for (int i = 1; i <= 8; i++)
+                    {
+                        newHorizontal = this.horizontal;
+                        newVertical = this.vertical + i * j;
+                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                        {
+                        }
+                        else
+                        {
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                            {
+                                if ((newHorizontal == horizontal) && (newVertical == vertical))
+                                {
+                                    result = true;
+
+                                    return result;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
                 return result;
             }
         }
@@ -853,50 +1556,35 @@ namespace EnochianChess
                     chessboard.MakeThisCellSelected(horizontal, vertical);
                 }
                 chessboard.DrawChessman(this);
-                for (int i = -1; i <= 1; i++)
+                newHorizontal = horizontal;
+                newVertical = vertical + 1;
+                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                    (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                 {
-                    for (int j = -1; j <= 1; j++)
+                    if (deselect)
                     {
-                        newHorizontal = horizontal + i;
-                        newVertical = vertical + j;
-                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
-                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
-                        {
-                            if (deselect)
-                            {
-                                chessboard.MakeThisCellUsual(newHorizontal, newVertical);
-                            }
-                            else
-                            {
-                                chessboard.MakeThisCellSelected(newHorizontal, newVertical);
-                            }
-
-                        }
+                        chessboard.MakeThisCellUsual(newHorizontal, newVertical);
                     }
-                }
-
+                    else
+                    {
+                        chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                    }
+                }       
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
             {
                 bool result = false;
                 int newHorizontal, newVertical;
-                for (int i = -1; i <= 1; i++)
+                newHorizontal = this.horizontal;
+                newVertical = this.vertical + 1;
+                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                   (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                 {
-                    for (int j = -1; j <= 1; j++)
+                    if ((newHorizontal == horizontal) && (newVertical == vertical))
                     {
-                        newHorizontal = this.horizontal + i;
-                        newVertical = this.vertical + j;
-                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
-                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
-                        {
-                            if ((newHorizontal == horizontal) && (newVertical == vertical))
-                            {
-                                result = true;
-
-                                return result;
-                            }
-                        }
+                        result = true;
+                        return result;
                     }
                 }
                 return result;
@@ -905,58 +1593,46 @@ namespace EnochianChess
             public override void ShowPossibleAttacks(bool deselect)
             {
                 int newHorizontal, newVertical;
-                bool enemy = true; //dopilit'
-                for (int i = -1; i <= 1; i++)
+                newVertical = this.vertical + 1;
+                for (int i = -1; i <= 1; i += 2)
                 {
-                    for (int j = -1; j <= 1; j++)
-                        if (!((i == 0) && (j == 0)))
+                    newHorizontal = this.horizontal + i;
+                    if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                       (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                       ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
+                    {
+                        if (deselect)
                         {
-                            newHorizontal = this.horizontal + i;
-                            newVertical = this.vertical + j;
-                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
-                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
-                                (enemy))
-                            {
-                                if (deselect)
-                                {
-                                    chessboard.MakeThisCellUsual(newHorizontal, newVertical);
-                                }
-                                else
-                                {
-                                    chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
-                                }
-                                chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
-                            }
+                            chessboard.MakeThisCellUsual(newHorizontal, newVertical);
                         }
+                        else
+                        {
+                            chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                        }
+                        chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                    }
                 }
-
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
             {
                 bool result = false;
                 int newHorizontal, newVertical;
-                bool enemy = true; //dopilit'
-                for (int i = -1; i <= 1; i++)
+                newVertical = this.vertical + 1;
+                for (int i = -1; i <= 1; i += 2)
                 {
-                    for (int j = -1; j <= 1; j++)
+                    newHorizontal = this.horizontal + i;
+                    if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                       (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                       ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
                     {
-                        newHorizontal = this.horizontal + i;
-                        newVertical = this.vertical + j;
-                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
-                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
-                            (enemy))
+                        if ((newHorizontal == horizontal) && (newVertical == vertical))
                         {
-                            if ((newHorizontal == horizontal) && (newVertical == vertical))
-                            {
-                                result = true;
-
-                                return result;
-                            }
+                            result = true;
+                            return result;
                         }
                     }
                 }
-
                 return result;
             }
 
@@ -972,23 +1648,93 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                newHorizontal = horizontal;
+                newVertical = vertical - 1;
+                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                    (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                {
+                    if (deselect)
+                    {
+                        chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                    }
+                    else
+                    {
+                        chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                    }
+                }       
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
             {
-                bool result = true;
-
+                bool result = false;
+                int newHorizontal, newVertical;
+                newHorizontal = this.horizontal;
+                newVertical = this.vertical - 1;
+                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                   (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                {
+                    if ((newHorizontal == horizontal) && (newVertical == vertical))
+                    {
+                        result = true;
+                        return result;
+                    }
+                }
                 return result;
             }
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                int newHorizontal, newVertical;
+                newVertical = this.vertical - 1;
+                for (int i = -1; i <= 1; i += 2)
+                {
+                    newHorizontal = this.horizontal + i;
+                    if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                       (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                       ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
+                    {
+                        if (deselect)
+                        {
+                            chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                        }
+                        else
+                        {
+                            chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                        }
+                        chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                    }
+                }
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
             {
-                bool result = true;
-
+                bool result = false;
+                int newHorizontal, newVertical;
+                newVertical = this.vertical - 1;
+                for (int i = -1; i <= 1; i += 2)
+                {
+                    newHorizontal = this.horizontal + i;
+                    if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                       (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                       ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
+                    {
+                        if ((newHorizontal == horizontal) && (newVertical == vertical))
+                        {
+                            result = true;
+                            return result;
+                        }
+                    }
+                }
                 return result;
             }
         }
@@ -1004,22 +1750,92 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                newHorizontal = horizontal - 1;
+                newVertical = vertical;
+                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                    (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                {
+                    if (deselect)
+                    {
+                        chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                    }
+                    else
+                    {
+                        chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                    }
+                }       
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
             {
-                bool result = true;
-
+                bool result = false;
+                int newHorizontal, newVertical;
+                newHorizontal = this.horizontal - 1;
+                newVertical = this.vertical;
+                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                   (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                {
+                    if ((newHorizontal == horizontal) && (newVertical == vertical))
+                    {
+                        result = true;
+                        return result;
+                    }
+                }
                 return result;
             }
             public override void ShowPossibleAttacks(bool deselect)
             {
+                int newHorizontal, newVertical;
+                newHorizontal = this.horizontal - 1;
+                for (int i = -1; i <= 1; i += 2)
+                {
+                    newVertical = this.vertical + i;
+                    if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                       (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                       ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
+                    {
+                        if (deselect)
+                        {
+                            chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                        }
+                        else
+                        {
+                            chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                        }
+                        chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                    }
+                }
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
             {
-                bool result = true;
-
+                bool result = false;
+                int newHorizontal, newVertical;
+                newHorizontal = this.horizontal - 1;
+                for (int i = -1; i <= 1; i += 2)
+                {
+                    newVertical = this.vertical + i;
+                    if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                       (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                       ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
+                    {
+                        if ((newHorizontal == horizontal) && (newVertical == vertical))
+                        {
+                            result = true;
+                            return result;
+                        }
+                    }
+                }
                 return result;
             }
         }
@@ -1035,23 +1851,93 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                int newHorizontal, newVertical;
+                if (deselect)
+                {
+                    chessboard.MakeThisCellUsual(horizontal, vertical);
+                }
+                else
+                {
+                    chessboard.MakeThisCellSelected(horizontal, vertical);
+                }
+                chessboard.DrawChessman(this);
+                newHorizontal = horizontal + 1;
+                newVertical = vertical;
+                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                    (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                {
+                    if (deselect)
+                    {
+                        chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                    }
+                    else
+                    {
+                        chessboard.MakeThisCellSelected(newHorizontal, newVertical);
+                    }
+                }       
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
             {
-                bool result = true;
-
+                bool result = false;
+                int newHorizontal, newVertical;
+                newHorizontal = this.horizontal + 1;
+                newVertical = this.vertical;
+                if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                   (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
+                {
+                    if ((newHorizontal == horizontal) && (newVertical == vertical))
+                    {
+                        result = true;
+                        return result;
+                    }
+                }
                 return result;
             }
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                int newHorizontal, newVertical;
+                newHorizontal = this.horizontal + 1;
+                for (int i = -1; i <= 1; i += 2)
+                {
+                    newVertical = this.vertical + i;
+                    if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                       (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                       ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
+                    {
+                        if (deselect)
+                        {
+                            chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                        }
+                        else
+                        {
+                            chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                        }
+                        chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
+                    }
+                }
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
             {
-                bool result = true;
-
+                bool result = false;
+                int newHorizontal, newVertical;
+                newHorizontal = this.horizontal + 1;
+                for (int i = -1; i <= 1; i += 2)
+                {
+                    newVertical = this.vertical + i;
+                    if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                       (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                       ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
+                    {
+                        if ((newHorizontal == horizontal) && (newVertical == vertical))
+                        {
+                            result = true;
+                            return result;
+                        }
+                    }
+                }
                 return result;
             }
         }
@@ -1214,6 +2100,42 @@ namespace EnochianChess
             public void MakeThisCellUsual(int horizontal, int vertical)
             {
                 cellState[horizontal, vertical] = CellState.Usual;
+                int graphHorizontal, graphVertical;
+                if (horizontal == 9)
+                {
+                    horizontal = 8;
+                    graphHorizontal = 9;
+                }
+                else
+                {
+                    if (horizontal == 0)
+                    {
+                        horizontal = 1;
+                        graphHorizontal = 0;
+                    }
+                    else
+                    {
+                        graphHorizontal = horizontal;
+                    }
+                }
+
+                if (vertical == 9)
+                {
+                    vertical = 8;
+                    graphVertical = 9;
+                }
+                else
+                {
+                    if (vertical == 0)
+                    {
+                        vertical = 1;
+                        graphVertical = 0;
+                    }
+                    else
+                    {
+                        graphVertical = vertical;
+                    }
+                }
 
                 Graphics graphics = Graphics.FromImage(chessboardBitmap);
                 Brush chessboardSelectedBrush;
@@ -1226,8 +2148,8 @@ namespace EnochianChess
                     chessboardSelectedBrush = new SolidBrush(colorOfDarkCell);
                 }
                 Pen chessboardPen = new Pen(Color.Black, 2);
-                graphics.FillRectangle(chessboardSelectedBrush, x + horizontal * sizeOfCell, y + vertical * sizeOfCell, sizeOfCell, sizeOfCell);
-                graphics.DrawRectangle(chessboardPen, x + horizontal * sizeOfCell, y + vertical * sizeOfCell, sizeOfCell, sizeOfCell);
+                graphics.FillRectangle(chessboardSelectedBrush, x + graphHorizontal * sizeOfCell, y + graphVertical * sizeOfCell, sizeOfCell, sizeOfCell);
+                graphics.DrawRectangle(chessboardPen, x + graphHorizontal * sizeOfCell, y + graphVertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.Dispose();
 
             //    chessboardPicturebox.Refresh();
@@ -1448,10 +2370,7 @@ namespace EnochianChess
 
         public GameForm()
         {
-
             InitializeComponent();
-
-
             //creating array of objects for resizing
             labelGroup = new Label[5] {label1, label2, label3, label4, label5 };
             buttonGroup = new Button[2] { button1, button2 };
@@ -1511,7 +2430,6 @@ namespace EnochianChess
 
         private void initializePictureBox(PictureBox picturebox)
         {
-           // Graphics graphics = picturebox.CreateGraphics();
             Graphics graphics;
             Bitmap bitmap;
             if (picturebox.Image != null)

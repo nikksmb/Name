@@ -43,6 +43,7 @@ namespace EnochianChess
             GameForm gameForm = new GameForm();
             gameForm.Owner = this;
             gameForm.Show();
+            this.Hide();
         }
 
         private void button5_Click(object sender, EventArgs e)
@@ -52,7 +53,10 @@ namespace EnochianChess
 
         private void button4_Click(object sender, EventArgs e)
         {
-
+            SettingsForm settingsForm = new SettingsForm();
+            settingsForm.Owner = this;
+            settingsForm.Show();
+            this.Hide();
         }
 
     }

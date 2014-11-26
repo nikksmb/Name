@@ -54,7 +54,7 @@ namespace EnochianChess
              * Numbers of arrangements shown near.*/
 
             //Bitmaps of each chessman
-        //    private Bitmap[,] chessmanBitmap {get;}
+            //    private Bitmap[,] chessmanBitmap {get;}
 
             private Bitmap[,] chessmanBitmap = new Bitmap[4, 9] { 
 
@@ -82,7 +82,7 @@ namespace EnochianChess
                 Properties.Resources.BlackPawnQueen, Properties.Resources.BlackPawnBishop,Properties.Resources.BlackPawnKnight,
                 Properties.Resources.BlackPawnTower}
         
-            } ;
+            };
 
             /* Numbers of chessmen are: 0 - King, 1 - Queen, 2 - Bishop, 3 - Knight, 4 - Tower,
              * 5 - Pawn of Queen, 6 - Pawn of Bishop, 7 - Pawn of Knight, 8 - Pawn of Tower.
@@ -117,7 +117,7 @@ namespace EnochianChess
             };
 
             //Positions of any chessman, any player, any arrangement
-      //      private int[, , ,] positionOfChessmen { get; }
+            //      private int[, , ,] positionOfChessmen { get; }
 
             private int[, , ,] positionOfChessmen = new int[8, 4, 9, 2] 
             {
@@ -257,7 +257,7 @@ namespace EnochianChess
                 }
                 if (gender == 0)
                 {
-                    result =  ruNamePlayerColorNominativeMasculine[indexOfPlayer] + ' ' +  
+                    result = ruNamePlayerColorNominativeMasculine[indexOfPlayer] + ' ' +
                         ruNameChessmanNominative[indexOfChessman];
                 }
                 if (gender == 1)
@@ -315,7 +315,7 @@ namespace EnochianChess
             private Chessman GetNewCorrectPawn(ChessmenParameters chessmanParameters, Chessboard chessboard)
             {
                 Chessman result;
-                switch ((int) chessmanParameters.player)
+                switch ((int)chessmanParameters.player)
                 {
                     case 0: result = new YellowPawn(chessmanParameters, chessboard);
                         break;
@@ -401,8 +401,8 @@ namespace EnochianChess
                 chessmanParam.engName = playersColor + ' ' + chessmanName;
                 chessmanParam.chessmanBitmap = chessmanBitmap[indexOfPlayer, indexOfChessman];
                 chessmanParam.ruNameAccusative = GetAccusativeRu(indexOfPlayer, indexOfChessman);
-                chessmanParam.kindOfChessman = (ChessmenNames) indexOfChessman;
-                chessmanParam.player = (Players) indexOfPlayer;
+                chessmanParam.kindOfChessman = (ChessmenNames)indexOfChessman;
+                chessmanParam.player = (Players)indexOfPlayer;
                 switch (indexOfChessman)
                 {
                     case 0: result = new King(chessmanParam, chessboard);
@@ -523,6 +523,11 @@ namespace EnochianChess
 
             //ingame methods
 
+            public ChessmenNames GetChessmanName()
+            {
+                return nameOfChessman;
+            }
+
             public abstract void ShowPossibleMovements(bool deselect);
 
             public abstract void ShowPossibleAttacks(bool deselect);
@@ -548,7 +553,6 @@ namespace EnochianChess
                 Chessman attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
                 while (attackedChessman != null)
                 {
-                    chessboard.MakeThisCellUsual(horizontal, vertical);
                     attackedChessman.KillingBy(this.player);
                     attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
                 }
@@ -570,14 +574,15 @@ namespace EnochianChess
                 return result;
             }
 
-            public void KillingBy(Players player)
+            public virtual void KillingBy(Players player)
             {
+                chessboard.MakeThisCellUsual(horizontal, vertical);
                 horizontal = -1;
                 vertical = -1;
                 isInGame = false;
                 //dopilit'
                 //class "Player" maybe
-                
+
             }
 
             public virtual Point GetCoordinates()
@@ -617,7 +622,7 @@ namespace EnochianChess
                         graphHorizontal = horizontal;
                     }
                 }
-                
+
                 if (vertical == 9)
                 {
                     vertical = 8;
@@ -635,9 +640,6 @@ namespace EnochianChess
                         graphVertical = vertical;
                     }
                 }
-                
-                //dopilit' 
-                //real coordinates and specific fields
             }
 
             //graphics spec
@@ -651,13 +653,21 @@ namespace EnochianChess
                 }
             }
 
-            //public override Point GetCoordinates()
-            //{
-            //    Point result = new Point();
-            //    result.X = graphHorizontal;
-            //    result.Y = graphVertical;
-            //    return result;
-            //}
+            public override Point GetCoordinates()
+            {
+                Point result = new Point();
+                result.X = graphHorizontal;
+                result.Y = graphVertical;
+                return result;
+            }
+
+            public Point GetRealCoordinates()
+            {
+                Point result = new Point();
+                result.X = horizontal;
+                result.Y = vertical;
+                return result;
+            }
 
             public override void MoveChessman(int horizontal, int vertical)
             {
@@ -672,14 +682,30 @@ namespace EnochianChess
             public override void AttackChessmanOnCoordinates(int horizontal, int vertical)
             {
                 Chessman attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
+                while (attackedChessman != null)
+                {
+                    attackedChessman.KillingBy(this.player);
+                    attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
+                }
                 chessboard.MakeThisCellUsual(this.graphHorizontal, this.graphVertical);
-                chessboard.MakeThisCellUsual(horizontal, vertical);
                 this.horizontal = horizontal;
                 this.vertical = vertical;
                 graphHorizontal = horizontal;
                 graphVertical = vertical;
                 chessboard.DrawChessman(this);
-                attackedChessman.KillingBy(this.player);
+            }
+
+            public override void KillingBy(Players player)
+            {
+                horizontal = -1;
+                vertical = -1;
+                isInGame = false;
+                chessboard.MakeThisCellUsual(graphHorizontal, graphVertical);
+                graphHorizontal = horizontal;
+                graphVertical = vertical;
+                //dopilit'
+                //class "Player" maybe
+
             }
 
             public override void ShowPossibleMovements(bool deselect)
@@ -694,9 +720,9 @@ namespace EnochianChess
                     chessboard.MakeThisCellSelected(graphHorizontal, graphVertical);
                 }
                 chessboard.DrawChessman(this);
-                for (int i = -1; i<=1; i++)
+                for (int i = -1; i <= 1; i++)
                 {
-                    for (int j = -1; j<=1; j++)
+                    for (int j = -1; j <= 1; j++)
                     {
                         newHorizontal = horizontal + i;
                         newVertical = vertical + j;
@@ -711,11 +737,11 @@ namespace EnochianChess
                             {
                                 chessboard.MakeThisCellSelected(newHorizontal, newVertical);
                             }
-                            
+
                         }
                     }
                 }
-                
+
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
@@ -749,28 +775,28 @@ namespace EnochianChess
                 for (int i = -1; i <= 1; i++)
                 {
                     for (int j = -1; j <= 1; j++)
-                    if (!((i == 0) && (j == 0)))
-                    {
-                        newHorizontal = this.horizontal + i;
-                        newVertical = this.vertical + j;
-                        if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
-                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
-                            (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
+                        if (!((i == 0) && (j == 0)))
                         {
-                            if (deselect)
+                            newHorizontal = this.horizontal + i;
+                            newVertical = this.vertical + j;
+                            if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
+                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                             {
-                                chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                if (deselect)
+                                {
+                                    chessboard.MakeThisCellUsual(newHorizontal, newVertical);
+                                }
+                                else
+                                {
+                                    chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
+                                }
+                                //refresh
+                                chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
                             }
-                            else
-                            {
-                                chessboard.MakeThisCellAttacked(newHorizontal, newVertical);
-                            }
-                            //refresh
-                            chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
                         }
-                    }
                 }
-                
+
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
@@ -822,9 +848,9 @@ namespace EnochianChess
                     chessboard.MakeThisCellSelected(horizontal, vertical);
                 }
                 chessboard.DrawChessman(this);
-                for (int i = -2; i <= 2; i+=2)
+                for (int i = -2; i <= 2; i += 2)
                 {
-                    for (int j = -2; j <= 2; j+=2)
+                    for (int j = -2; j <= 2; j += 2)
                     {
                         newHorizontal = horizontal + i;
                         newVertical = vertical + j;
@@ -1345,7 +1371,7 @@ namespace EnochianChess
             {
                 bool result = false;
                 int newHorizontal, newVertical;
-                for (int j = -1; j <= 1; j+=2)
+                for (int j = -1; j <= 1; j += 2)
                 {
                     for (int i = 1; i <= 8; i++)
                     {
@@ -1463,7 +1489,7 @@ namespace EnochianChess
                                 }
                                 //refresh
                                 chessboard.DrawChessman(chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical));
-                            }  
+                            }
                             break;
                         }
                     }
@@ -1569,7 +1595,7 @@ namespace EnochianChess
                     {
                         chessboard.MakeThisCellSelected(newHorizontal, newVertical);
                     }
-                }       
+                }
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
@@ -1642,7 +1668,7 @@ namespace EnochianChess
         public class RedPawn : Chessman
         {
             public RedPawn(ChessmenParameters chessmanParameters, Chessboard chessboard)
-                : base(chessmanParameters,chessboard)
+                : base(chessmanParameters, chessboard)
             {
             }
 
@@ -1671,7 +1697,7 @@ namespace EnochianChess
                     {
                         chessboard.MakeThisCellSelected(newHorizontal, newVertical);
                     }
-                }       
+                }
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
@@ -1773,7 +1799,7 @@ namespace EnochianChess
                     {
                         chessboard.MakeThisCellSelected(newHorizontal, newVertical);
                     }
-                }       
+                }
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
@@ -1874,7 +1900,7 @@ namespace EnochianChess
                     {
                         chessboard.MakeThisCellSelected(newHorizontal, newVertical);
                     }
-                }       
+                }
             }
 
             public override bool IsThatPossibleMove(int horizontal, int vertical)
@@ -1951,8 +1977,8 @@ namespace EnochianChess
             const int COUNT_OF_CHESSMEN = COUNT_OF_PLAYERS * COUNT_OF_PLAYER_CHESSMEN;
             const int WIDTH_OF_CHESSBOARD = 8;
 
-            private enum CellState {Usual, Selected, Attacked};
-            private CellState[,] cellState = new CellState[10,10];
+            private enum CellState { Usual, Selected, Attacked };
+            private CellState[,] cellState = new CellState[10, 10];
 
             private static Bitmap chessboardBitmap;
             private PictureBox chessboardPicturebox;
@@ -1968,7 +1994,7 @@ namespace EnochianChess
             private string selectedChessmanStr = "";
             private Chessman selectedChessman;
 
-            private char[] indexToChar = {'H','H','G','F','E','D','C','B','A','A'};
+            private char[] indexToChar = { 'H', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A', 'A' };
 
             public Chessboard(int X, int Y, int Width, int Height, int arrangementNumber)
             {
@@ -1998,7 +2024,6 @@ namespace EnochianChess
             private void OnceMakeFirstArrangement()
             //There are 8 variants of different first positions of chessmen. Possibly this class should
             //get users options from record
-              
             {
                 int k = 0;
                 ChessmenInfo chessmanInfo = new ChessmenInfo(numberOfArrangement);
@@ -2017,12 +2042,24 @@ namespace EnochianChess
             {
                 Chessman result = null;
                 for (int i = 0; i < COUNT_OF_CHESSMEN; i++)
-                {
+                {    
                     if ((currentState[i].GetCoordinates().X == horizontal) &&
                         (currentState[i].GetCoordinates().Y == vertical))
                     {
                         result = currentState[i];
-                        break;
+                        return result;
+                    }
+                }
+                for (int i = 0; i < COUNT_OF_CHESSMEN; i++)
+                {
+                    if (currentState[i].GetChessmanName() == ChessmenNames.King)
+                    {
+                        if ((((King)currentState[i]).GetRealCoordinates().X == horizontal) &&
+                        (((King)currentState[i]).GetRealCoordinates().Y == vertical))
+                        {
+                            result = currentState[i];
+                            return result;
+                        }
                     }
                 }
                 return result;
@@ -2052,8 +2089,8 @@ namespace EnochianChess
                 y = Y;
                 width = Width;
                 height = Height;
-                sizeOfCell = Math.Min(Width,Height) / 10;
-                sizeOfChessboard = Math.Min(width - x,height-y);
+                sizeOfCell = Math.Min(Width, Height) / 10;
+                sizeOfChessboard = Math.Min(width - x, height - y);
             }
 
             public void DrawChessmen()
@@ -2080,7 +2117,7 @@ namespace EnochianChess
                 graphics.DrawRectangle(chessboardPen, x + horizontal * sizeOfCell, y + vertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.Dispose();
 
-         //       chessboardPicturebox.Refresh();
+                //       chessboardPicturebox.Refresh();
             }
 
             public void MakeThisCellAttacked(int horizontal, int vertical)
@@ -2094,7 +2131,7 @@ namespace EnochianChess
                 graphics.DrawRectangle(chessboardPen, x + horizontal * sizeOfCell, y + vertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.Dispose();
 
-           //     chessboardPicturebox.Refresh();
+                //     chessboardPicturebox.Refresh();
             }
 
             public void MakeThisCellUsual(int horizontal, int vertical)
@@ -2152,7 +2189,7 @@ namespace EnochianChess
                 graphics.DrawRectangle(chessboardPen, x + graphHorizontal * sizeOfCell, y + graphVertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.Dispose();
 
-            //    chessboardPicturebox.Refresh();
+                //    chessboardPicturebox.Refresh();
             }
 
             public Bitmap GetChessboardBitmap()
@@ -2171,17 +2208,17 @@ namespace EnochianChess
                 picturebox.Refresh();
             }
 
-            
+
 
             private void DrawChessboard()
             {
 
-                if (chessboardBitmap!=null)
+                if (chessboardBitmap != null)
                 {
                     chessboardBitmap.Dispose();
                 }
 
-                chessboardBitmap = new Bitmap(width,height);
+                chessboardBitmap = new Bitmap(width, height);
                 Graphics chessboardGraphics = Graphics.FromImage(chessboardBitmap);
 
                 //creating pen
@@ -2204,7 +2241,7 @@ namespace EnochianChess
                         //Corner cells have special shape, they can't pass here
                         if (!(((i == 1) || (i == WIDTH_OF_CHESSBOARD)) && ((j == 1) || (j == WIDTH_OF_CHESSBOARD))))
                         {
-                            switch (cellState[i,j])
+                            switch (cellState[i, j])
                             {
                                 case CellState.Usual:
                                     if ((i + j) % 2 == 0)
@@ -2227,7 +2264,7 @@ namespace EnochianChess
                         chessboardGraphics.DrawRectangle(chessboardPen, x + i * sizeOfCell, y + j * sizeOfCell, sizeOfCell, sizeOfCell);
                     }
                 }
-            
+
                 //Drawing special corners, they are doubled, so some rectangle parametrs are doubled
                 chessboardGraphics.FillRectangle(chessboardLightBrush, x + 0 * sizeOfCell, y + 1 * sizeOfCell, sizeOfCell * 2, sizeOfCell);
                 chessboardGraphics.DrawRectangle(chessboardPen, x + 0 * sizeOfCell, y + 1 * sizeOfCell, sizeOfCell * 2, sizeOfCell);
@@ -2264,8 +2301,8 @@ namespace EnochianChess
                 horizontal = mouseX / sizeOfCell;
                 vertical = mouseY / sizeOfCell;
                 //if cell exists
-                if (((horizontal > 0) && (horizontal < 9) && (vertical > 0) && (vertical < 9)) || 
-                //special corners
+                if (((horizontal > 0) && (horizontal < 9) && (vertical > 0) && (vertical < 9)) ||
+                    //special corners
                     (((horizontal == 9) && (vertical == 8)) ||
                     ((horizontal == 0) && (vertical == 1)) ||
                     ((horizontal == 8) && (vertical == 0)) ||
@@ -2304,8 +2341,8 @@ namespace EnochianChess
                 horizontal = mouseX / sizeOfCell;
                 vertical = mouseY / sizeOfCell;
                 //if cell exists
-                if (((horizontal > 0) && (horizontal < 9) && (vertical > 0) && (vertical < 9)) || 
-                //special corners
+                if (((horizontal > 0) && (horizontal < 9) && (vertical > 0) && (vertical < 9)) ||
+                    //special corners
                     (((horizontal == 9) && (vertical == 8)) ||
                     ((horizontal == 0) && (vertical == 1)) ||
                     ((horizontal == 8) && (vertical == 0)) ||
@@ -2314,7 +2351,7 @@ namespace EnochianChess
                     bool wasAttack = false;
                     if (GetChessmanOnCoordinates(horizontal, vertical) != null)
                     {
-                        
+
                         if (GetChessmanOnCoordinates(horizontal, vertical) != selectedChessman)
                         {
                             //attack method if enemy
@@ -2339,7 +2376,7 @@ namespace EnochianChess
                             }
                         }
                         else
-                        {   
+                        {
                             //if repeat click then deselect chessman
                             selectedChessman.ShowPossibleMovements(true);
                             selectedChessman.ShowPossibleAttacks(true);
@@ -2372,7 +2409,7 @@ namespace EnochianChess
         {
             InitializeComponent();
             //creating array of objects for resizing
-            labelGroup = new Label[5] {label1, label2, label3, label4, label5 };
+            labelGroup = new Label[5] { label1, label2, label3, label4, label5 };
             buttonGroup = new Button[2] { button1, button2 };
 
             //activate resize for chessboard
@@ -2387,7 +2424,7 @@ namespace EnochianChess
             switch (turn)
             {
                 case 0:
-                    label1.Text="Ходит красный игрок";
+                    label1.Text = "Ходит красный игрок";
                     label1.ForeColor = Color.FromArgb(192, 0, 0);
                     label4.ForeColor = Color.FromArgb(192, 0, 0);
                     button1.BackColor = Color.FromArgb(192, 0, 0);
@@ -2440,7 +2477,7 @@ namespace EnochianChess
             }
             else
             {
-                bitmap = new Bitmap(picturebox.Width,picturebox.Height);
+                bitmap = new Bitmap(picturebox.Width, picturebox.Height);
                 graphics = Graphics.FromImage(bitmap);
                 graphics.FillRectangle(Brushes.White, 0, 0, picturebox.Width, picturebox.Height);
                 graphics.Dispose();
@@ -2461,26 +2498,26 @@ namespace EnochianChess
 
         private void выходToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            this.Close();
         }
 
         private void новаяToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            
+
             //if (pictureBox1.Image != null)
-                initializePictureBox(pictureBox1);
-            
+            initializePictureBox(pictureBox1);
+
             chessboard = new Chessboard(0, 0, pictureBox1.Width, pictureBox1.Height, arrangement);
             chessboard.SetStatusBar(label4);
 
             pictureBox1.MouseMove += pictureBox1_MouseMove;
             chessboard.ShowChessboard(pictureBox1);
-   //         pictureBox1.Image = chessboard.GetChessboardBitmap();
+            //         pictureBox1.Image = chessboard.GetChessboardBitmap();
         }
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            
+
             int x = e.X;
             int y = e.Y;
             chessboard.WriteInformationInStatusBar(x, y);
@@ -2563,7 +2600,7 @@ namespace EnochianChess
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
-            
+
         }
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
@@ -2571,7 +2608,12 @@ namespace EnochianChess
             int x = e.X;
             int y = e.Y;
             chessboard.ClickOnChessboard(x, y);
-          //  chessboard.ShowChessboard(pictureBox1);
+            //  chessboard.ShowChessboard(pictureBox1);
+        }
+
+        private void GameForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            this.Owner.Show();
         }
     }
 }

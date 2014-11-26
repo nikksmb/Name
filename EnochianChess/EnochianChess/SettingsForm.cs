@@ -21,5 +21,19 @@ namespace EnochianChess
         {
 
         }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ColorDialog MyDialog = new ColorDialog();
+            MyDialog.AllowFullOpen = false;
+            MyDialog.ShowHelp = true;
+            if (MyDialog.ShowDialog() == DialogResult.OK)
+                button1.BackColor = MyDialog.Color;
+        }
     }
 }

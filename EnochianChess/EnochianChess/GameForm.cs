@@ -18,23 +18,36 @@ namespace EnochianChess
         //This is convenient for resize
         static Label[] labelGroup;
         static Button[] buttonGroup;
-
-        static int turn = 0;
         static Bitmap buttonBackground;
 
+        Game game;
         ChessmenInfo chessmenInfo;
-        Chessboard chessboard;
+       // Chessboard chessboard;
 
         public struct ChessmenParameters
         {
             public string ruNameNominative;
             public string engName;
             public string ruNameAccusative;
+            public string ruMove;
+            public string ruAttack;
             public Bitmap chessmanBitmap;
             public int horizontal;
             public int vertical;
             public Players player;
             public ChessmenNames kindOfChessman;
+        }
+
+        public struct InterfaceElements
+        {
+            public PictureBox chessboardPic;
+            public PictureBox takenChessmenPic;
+            public PictureBox lostChessmenPic;
+            public Label statusBar;
+            public Label turnBar;
+            public RichTextBox logBar;
+            public Button surrenderButton;
+            public Button prisonersChangeButton;
         }
 
         public enum Players { Yellow = 0, Red = 1, Blue = 2, Black = 3 };
@@ -43,7 +56,6 @@ namespace EnochianChess
             King = 0, Queen = 1, Bishop = 2, Knight = 3, Tower = 4, PawnOfQueen = 5, PawnOfBishop = 6,
             PawnOfKnight = 7, PawnOfTower = 8
         };
-
 
         //CHESSMEN INFO
         private class ChessmenInfo
@@ -225,10 +237,9 @@ namespace EnochianChess
                 this.numberOfArrangement = numberOfArrangement;
             }
 
-            private string GetNominativeRu(int indexOfPlayer, int indexOfChessman)
+            private int GetGender(int indexOfChessman)
             {
                 int gender = -1;
-                string result = " ";
                 switch (indexOfChessman)
                 {
                     case 0: gender = 0;
@@ -252,9 +263,16 @@ namespace EnochianChess
                     default:
                         {
                             MessageBox.Show("Внутренняя ошибка, невозможно выполнить действие");
-                            return null;
+                            break;
                         }
                 }
+                return gender;
+            }
+
+            private string GetNominativeRu(int indexOfPlayer, int indexOfChessman)
+            {
+                int gender = GetGender(indexOfChessman);
+                string result = " ";
                 if (gender == 0)
                 {
                     result = ruNamePlayerColorNominativeMasculine[indexOfPlayer] + ' ' +
@@ -270,34 +288,8 @@ namespace EnochianChess
 
             private string GetAccusativeRu(int indexOfPlayer, int indexOfChessman)
             {
-                int gender = -1;
+                int gender = GetGender(indexOfChessman);
                 string result = " ";
-                switch (indexOfChessman)
-                {
-                    case 0: gender = 0;
-                        break;
-                    case 1: gender = 1;
-                        break;
-                    case 2: gender = 0;
-                        break;
-                    case 3: gender = 0;
-                        break;
-                    case 4: gender = 1;
-                        break;
-                    case 5: gender = 1;
-                        break;
-                    case 6: gender = 1;
-                        break;
-                    case 7: gender = 1;
-                        break;
-                    case 8: gender = 1;
-                        break;
-                    default:
-                        {
-                            MessageBox.Show("Внутренняя ошибка, невозможно выполнить действие");
-                            return null;
-                        }
-                }
                 if (gender == 0)
                 {
                     result = ruNamePlayerColorAccusativeMasculine[indexOfPlayer] + ' ' +
@@ -307,6 +299,36 @@ namespace EnochianChess
                 {
                     result = ruNamePlayerColorAccusativeFeminine[indexOfPlayer] + ' ' +
                         ruNameChessmanAccusative[indexOfChessman];
+                }
+                return result;
+            }
+
+            private string GetMoveRu(int indexOfChessman)
+            {
+                int gender = GetGender(indexOfChessman);
+                string result = " ";
+                if (gender == 0)
+                {
+                    result = "переместился на";
+                }
+                if (gender == 1)
+                {
+                    result = "переместилась на";
+                }
+                return result;
+            }
+
+            private string GetAttackRu(int indexOfChessman)
+            {
+                int gender = GetGender(indexOfChessman);
+                string result = " ";
+                if (gender == 0)
+                {
+                    result = "атаковал";
+                }
+                if (gender == 1)
+                {
+                    result = "атаковала";
                 }
                 return result;
             }
@@ -403,6 +425,8 @@ namespace EnochianChess
                 chessmanParam.ruNameAccusative = GetAccusativeRu(indexOfPlayer, indexOfChessman);
                 chessmanParam.kindOfChessman = (ChessmenNames)indexOfChessman;
                 chessmanParam.player = (Players)indexOfPlayer;
+                chessmanParam.ruAttack = GetAttackRu(indexOfChessman);
+                chessmanParam.ruMove = GetMoveRu(indexOfChessman);
                 switch (indexOfChessman)
                 {
                     case 0: result = new King(chessmanParam, chessboard);
@@ -434,6 +458,287 @@ namespace EnochianChess
 
 
         }
+        //dopilit'
+        //PLAYER
+        public class Player
+        {
+            public bool IsInGame { get; private set; }
+            private Players player;
+            private Players controller;
+            private List<Chessman> listOfChessmen;
+            private List<Chessman> listOfLostChessmen;
+            private List<Chessman> listOfTakenChessmen;
+            private PictureBox takenChessmenPic;
+            private PictureBox lostChessmenPic;
+
+            public Player(Players player, PictureBox takenPic, PictureBox lostPic)
+            {
+                listOfChessmen = new List<Chessman>();
+                listOfLostChessmen = new List<Chessman>();
+                listOfTakenChessmen = new List<Chessman>();
+                this.player = player;
+                controller = player;
+                takenChessmenPic = takenPic;
+                lostChessmenPic = lostPic;
+                IsInGame = true;
+            }
+
+            public void SetController(Players player)
+            {
+                controller = player;
+            }
+
+            public void AddChessman(Chessman chessman)
+            {
+                listOfChessmen.Add(chessman);
+            }
+
+            public void AddLostChessman(Chessman chessman)
+            {
+                listOfLostChessmen.Add(chessman);
+            }
+
+            public void AddTakenChessman(Chessman chessman)
+            {
+                listOfTakenChessmen.Add(chessman);
+            }
+
+            //graphics
+            public void DrawLostChessman()
+            {
+                if (lostChessmenPic.Image != null)
+                {
+                    lostChessmenPic.Image.Dispose();
+                }
+                lostChessmenPic.Image = new Bitmap(lostChessmenPic.Width, lostChessmenPic.Height);
+                int sizeOfCell = Math.Min(lostChessmenPic.Width / 5, lostChessmenPic.Height / 2);
+                for (int i = 0; i < listOfLostChessmen.Count; i++)
+                {
+                    listOfLostChessmen[i].ShowChessman(lostChessmenPic, (i % 5) * sizeOfCell, (i / 5) * sizeOfCell, sizeOfCell, sizeOfCell);
+                }
+                lostChessmenPic.Refresh();
+            }
+
+            public void DrawTakenChessman()
+            {
+                if (takenChessmenPic.Image != null)
+                {
+                    takenChessmenPic.Image.Dispose();
+                }
+                takenChessmenPic.Image = new Bitmap(takenChessmenPic.Width, takenChessmenPic.Height);
+                int sizeOfCell = Math.Min(takenChessmenPic.Width / 5, takenChessmenPic.Height / 2);
+                for (int i = 0; i < listOfTakenChessmen.Count; i++)
+                {
+                    listOfTakenChessmen[i].ShowChessman(takenChessmenPic, (i % 5) * sizeOfCell, (i / 5) * sizeOfCell, sizeOfCell, sizeOfCell);
+                }
+                takenChessmenPic.Refresh();
+            }
+
+        }
+        //dopilit'
+        //GAME
+        public class Game
+        {
+            private string logTurn;  //could be colorful
+            private Chessboard chessboard;
+            private Players turn; //current turn
+            private Player yellowPlayer;
+            private Player redPlayer;
+            private Player bluePlayer;
+            private Player blackPlayer;
+            private PictureBox chessboardPic;
+            private PictureBox takenChessmenPic;
+            private PictureBox lostChessmenPic;
+            private Label statusBar;
+            private Label turnBar;
+            private RichTextBox log;
+            private Button surrenderButton;
+            private Button prisonersChangeButton;
+            private int numberOfTurn;
+
+            public Game(InterfaceElements interfaceElements)
+            {
+                chessboardPic = interfaceElements.chessboardPic;
+                takenChessmenPic = interfaceElements.takenChessmenPic;
+                lostChessmenPic = interfaceElements.lostChessmenPic;
+                log = interfaceElements.logBar;
+                statusBar = interfaceElements.statusBar;
+                turnBar = interfaceElements.turnBar;
+                surrenderButton = interfaceElements.surrenderButton;
+                prisonersChangeButton = interfaceElements.prisonersChangeButton;
+            }
+
+            public void StartNewGame()
+            {
+                redPlayer = new Player(Players.Red, takenChessmenPic, lostChessmenPic);
+                yellowPlayer = new Player(Players.Yellow, takenChessmenPic, lostChessmenPic);
+                blackPlayer = new Player(Players.Black, takenChessmenPic, lostChessmenPic);
+                bluePlayer = new Player(Players.Blue, takenChessmenPic, lostChessmenPic);
+                turn = Players.Yellow;
+                chessboard = new Chessboard(this, 0, 0, chessboardPic.Width, chessboardPic.Height, arrangement);
+                chessboard.SetStatusBar(statusBar);
+                chessboardPic.MouseClick += chessboardPic_MouseClick;
+                chessboardPic.MouseMove += chessboardPic_MouseMove;
+                chessboard.ShowChessboard(chessboardPic);
+                numberOfTurn = 1;
+                //dopilit'
+            }
+
+            private void chessboardPic_MouseClick(object sender, MouseEventArgs e)
+            {
+                int x = e.X;
+                int y = e.Y;
+                chessboard.ClickOnChessboard(x, y, turn);
+            }
+
+            private void chessboardPic_MouseMove(object sender, MouseEventArgs e)
+            {
+                int x = e.X;
+                int y = e.Y;
+                chessboard.WriteInformationInStatusBar(x, y);
+            }
+
+            public void SaveGame()
+            {
+            }
+
+            public void LoadGame()
+            {
+            }
+
+            public void ToggleTurn()
+            {
+                switch (turn)
+                {
+                    case Players.Red:
+                        if (blackPlayer.IsInGame)
+                        {
+                            turn = Players.Black;
+                            blackPlayer.DrawLostChessman();
+                            blackPlayer.DrawTakenChessman();
+                        }
+                        else
+                        {
+                        }
+                        break;
+                    case Players.Black:
+                        if (yellowPlayer.IsInGame)
+                        {
+                            turn = Players.Yellow;
+                            yellowPlayer.DrawLostChessman();
+                            yellowPlayer.DrawTakenChessman();
+                        }
+                        else
+                        {
+                        }
+                        break;
+                    case Players.Yellow:
+                        if (bluePlayer.IsInGame)
+                        {
+                            turn = Players.Blue;
+                            bluePlayer.DrawLostChessman();
+                            bluePlayer.DrawTakenChessman();
+                        }
+                        else
+                        {
+                        }
+                        break;
+                    case Players.Blue:
+                        if (redPlayer.IsInGame)
+                        {
+                            turn = Players.Red;
+                            redPlayer.DrawLostChessman();
+                            redPlayer.DrawTakenChessman();
+                        }
+                        else
+                        {
+                        }
+                        break;
+                }
+                InterfaceChangeWhileTurn();
+                numberOfTurn++;
+
+            }
+
+            private void InterfaceChangeWhileTurn()
+            {
+                switch (turn)
+                {
+                    case Players.Red:
+                        
+                        turnBar.Text = "Ходит красный игрок";
+                        turnBar.ForeColor = Color.FromArgb(192, 0, 0);
+                        statusBar.ForeColor = Color.FromArgb(192, 0, 0);
+                        surrenderButton.BackColor = Color.FromArgb(192, 0, 0);
+                        prisonersChangeButton.BackColor = Color.FromArgb(192, 0, 0);
+                        buttonBackground = Properties.Resources.ButtonRed;
+                        break;
+                    case Players.Black:
+                        turnBar.Text = "Ходит черный игрок";
+                        turnBar.ForeColor = Color.FromArgb(157, 157, 158);
+                        statusBar.ForeColor = Color.FromArgb(157, 157, 158);
+                        surrenderButton.BackColor = Color.FromArgb(157, 157, 158);
+                        prisonersChangeButton.BackColor = Color.FromArgb(157, 157, 158);
+                        buttonBackground.Dispose();
+                        buttonBackground = Properties.Resources.ButtonGray;
+                        break;
+                    case Players.Yellow:
+                        turnBar.Text = "Ходит желтый игрок";
+                        turnBar.ForeColor = Color.FromArgb(255, 237, 0);
+                        statusBar.ForeColor = Color.FromArgb(255, 237, 0);
+                        surrenderButton.BackColor = Color.FromArgb(255, 237, 0);
+                        prisonersChangeButton.BackColor = Color.FromArgb(255, 237, 0);
+                        buttonBackground.Dispose();
+                        buttonBackground = Properties.Resources.ButtonYellow;
+                        break;
+                    case Players.Blue:
+                        turnBar.Text = "Ходит синий игрок";
+                        turnBar.ForeColor = Color.FromArgb(0, 160, 227);
+                        statusBar.ForeColor = Color.FromArgb(0, 160, 227);
+                        surrenderButton.BackColor = Color.FromArgb(0, 160, 227);
+                        prisonersChangeButton.BackColor = Color.FromArgb(0, 160, 227);
+                        buttonBackground.Dispose();
+                        buttonBackground = Properties.Resources.ButtonBlue;
+                        break;
+                }
+            }
+
+            public void AddStringToLog(string newLog)
+            {
+                logTurn += numberOfTurn.ToString() + ". " + newLog;
+                log.Text = logTurn;
+            }
+
+            public void ResizeChessboard()
+            {
+                chessboard.ResizeChessboard(0, 0, chessboardPic.Width, chessboardPic.Height);
+                chessboard.ShowChessboard(chessboardPic);
+                GetPlayerObject(turn).DrawLostChessman();
+                GetPlayerObject(turn).DrawTakenChessman();
+            }
+
+            public bool IsGameStarted()
+            {
+                return (chessboard != null);
+            }
+
+            public Player GetPlayerObject(Players player)
+            {
+                switch (player)
+                {
+                    case Players.Yellow:
+                        return yellowPlayer;
+                    case Players.Red:
+                        return redPlayer;
+                    case Players.Black:
+                        return blackPlayer;
+                    case Players.Blue:
+                        return bluePlayer;
+                    default:
+                        return null;
+                }
+            }
+        }
 
         //CHESSMAN
         public abstract class Chessman
@@ -443,6 +748,7 @@ namespace EnochianChess
             protected int horizontal, vertical;
 
             protected Players player;
+            protected Player ownerObject;
 
             //chessman is not taken
             protected bool isInGame;
@@ -456,6 +762,11 @@ namespace EnochianChess
             protected string engName;
             protected string ruNameNominative;
             protected string ruNameAccusative;
+            protected string engMove = "moved";
+            protected string ruMove;
+            protected string engAttack = "attacked";
+            protected string ruAttack;
+
 
             public Chessman(ChessmenParameters chessmanParameter, Chessboard chessboard)
             {
@@ -470,6 +781,10 @@ namespace EnochianChess
                 this.chessboard = chessboard;
                 this.nameOfChessman = chessmanParameter.kindOfChessman;
                 this.isInGame = true;
+                this.ruAttack = chessmanParameter.ruAttack;
+                this.ruMove = chessmanParameter.ruMove;
+                ownerObject = chessboard.GetPlayerObject(player);
+                ownerObject.AddChessman(this);
             }
 
             //graphics
@@ -479,6 +794,13 @@ namespace EnochianChess
                 if (isInGame)
                 {
                     Graphics chessboardGraphics = Graphics.FromImage(chessboardBitmap);
+                    //coefficients in cell between sides
+                    /* ----1/10---
+                     * ----4/5----
+                     * 1/6-2/3-1/6 = 1
+                     * -----------
+                     * ----1/10--- = 1
+                     * */
                     chessboardGraphics.DrawImage(imageOfChessman, x + cellSize * horizontal + cellSize / 6, y + cellSize * vertical + cellSize / 10, 2 * cellSize / 3, 4 * cellSize / 5);
                     chessboardGraphics.Dispose();
                 }
@@ -497,11 +819,10 @@ namespace EnochianChess
             //useful for help menu
             public void ShowChessman(PictureBox picturebox, int x, int y, int width, int height)
             {
-                Bitmap chessman = new Bitmap(picturebox.Width, picturebox.Height);
-                Graphics chessmanGraphics = Graphics.FromImage(chessman);
-                chessmanGraphics.DrawImage(imageOfChessman, x, y, width, height);
+                int cellSize = Math.Max(width, height);
+                Graphics chessmanGraphics = Graphics.FromImage(picturebox.Image);
+                chessmanGraphics.DrawImage(imageOfChessman, x + cellSize / 6, y + cellSize / 10, 2 * width / 3, 4 * height / 5);
                 chessmanGraphics.Dispose();
-                picturebox.Image = chessman;
             }
 
             //string methods
@@ -528,6 +849,11 @@ namespace EnochianChess
                 return nameOfChessman;
             }
 
+            public Players GetChessmanOwner()
+            {
+                return player;
+            }
+
             public abstract void ShowPossibleMovements(bool deselect);
 
             public abstract void ShowPossibleAttacks(bool deselect);
@@ -536,9 +862,15 @@ namespace EnochianChess
 
             public virtual void MoveChessman(int horizontal, int vertical)
             {
+                string turnList = GetNameOfChessmanRussianNominative();
+                turnList += " " + chessboard.GetHorizontalChar(9 - this.horizontal) + " : " + (9 - this.vertical).ToString();
+                turnList += " " + ruMove + ' ';
+                turnList += " " + chessboard.GetHorizontalChar(9 - horizontal) + " : " + (9 - vertical).ToString();
                 chessboard.MakeThisCellUsual(this.horizontal, this.vertical);
                 this.horizontal = horizontal;
                 this.vertical = vertical;
+                turnList += '\n';
+                chessboard.SendLogToGame(turnList);
                 chessboard.DrawChessman(this);
             }
 
@@ -548,17 +880,23 @@ namespace EnochianChess
             {
                 //dopilit'
                 //string of state
-
-                //problem
+                string turnList = GetNameOfChessmanRussianNominative();
+                turnList += " " + chessboard.GetHorizontalChar(9 - this.horizontal) + " : " + (9 - this.vertical).ToString();
+                turnList += ' ' + ruAttack + ' ';
                 Chessman attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
                 while (attackedChessman != null)
                 {
-                    attackedChessman.KillingBy(this.player);
+                    turnList += ' ' + attackedChessman.GetNameOfChessmanRussianAccusative();
+                    turnList += " " + chessboard.GetHorizontalChar(9 - horizontal) + " : " + (9 - vertical).ToString();
+                    attackedChessman.Dying();
+                    ownerObject.AddTakenChessman(attackedChessman);
                     attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
                 }
                 chessboard.MakeThisCellUsual(this.horizontal, this.vertical);
                 this.horizontal = horizontal;
                 this.vertical = vertical;
+                turnList += '\n';
+                chessboard.SendLogToGame(turnList);
                 chessboard.DrawChessman(this);
             }
 
@@ -574,12 +912,13 @@ namespace EnochianChess
                 return result;
             }
 
-            public virtual void KillingBy(Players player)
+            public virtual void Dying()
             {
                 chessboard.MakeThisCellUsual(horizontal, vertical);
                 horizontal = -1;
                 vertical = -1;
                 isInGame = false;
+                ownerObject.AddLostChessman(this);
                 //dopilit'
                 //class "Player" maybe
 
@@ -684,7 +1023,7 @@ namespace EnochianChess
                 Chessman attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
                 while (attackedChessman != null)
                 {
-                    attackedChessman.KillingBy(this.player);
+                    attackedChessman.Dying();
                     attackedChessman = chessboard.GetChessmanOnCoordinates(horizontal, vertical);
                 }
                 chessboard.MakeThisCellUsual(this.graphHorizontal, this.graphVertical);
@@ -695,7 +1034,7 @@ namespace EnochianChess
                 chessboard.DrawChessman(this);
             }
 
-            public override void KillingBy(Players player)
+            public override void Dying()
             {
                 horizontal = -1;
                 vertical = -1;
@@ -703,6 +1042,7 @@ namespace EnochianChess
                 chessboard.MakeThisCellUsual(graphHorizontal, graphVertical);
                 graphHorizontal = horizontal;
                 graphVertical = vertical;
+                ownerObject.AddLostChessman(this);
                 //dopilit'
                 //class "Player" maybe
 
@@ -1977,6 +2317,8 @@ namespace EnochianChess
             const int COUNT_OF_CHESSMEN = COUNT_OF_PLAYERS * COUNT_OF_PLAYER_CHESSMEN;
             const int WIDTH_OF_CHESSBOARD = 8;
 
+            private Game game;
+
             private enum CellState { Usual, Selected, Attacked };
             private CellState[,] cellState = new CellState[10, 10];
 
@@ -1996,7 +2338,7 @@ namespace EnochianChess
 
             private char[] indexToChar = { 'H', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A', 'A' };
 
-            public Chessboard(int X, int Y, int Width, int Height, int arrangementNumber)
+            public Chessboard(Game game, int X, int Y, int Width, int Height, int arrangementNumber)
             {
                 x = X;
                 y = Y;
@@ -2005,11 +2347,14 @@ namespace EnochianChess
                 sizeOfCell = Math.Min(Width, Height) / 10;
                 sizeOfChessboard = Math.Min(width - x, height - y);
                 numberOfArrangement = arrangementNumber;
+                this.game = game;
                 OnceMakeFirstArrangement();
+                //dopilit'
                 colorOfDarkCell = Color.FromArgb(0, 152, 70);
                 colorOfLightCell = Color.FromArgb(255, 255, 255);
                 colorOfSelectedCell = Color.FromArgb(150, 100, 255);
                 colorOfAttackedCell = Color.FromArgb(255, 159, 0);
+
                 for (int i = 0; i < 10; i++)
                 {
                     for (int j = 0; j < 10; j++)
@@ -2116,8 +2461,6 @@ namespace EnochianChess
                 graphics.FillRectangle(chessboardSelectedBrush, x + horizontal * sizeOfCell, y + vertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.DrawRectangle(chessboardPen, x + horizontal * sizeOfCell, y + vertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.Dispose();
-
-                //       chessboardPicturebox.Refresh();
             }
 
             public void MakeThisCellAttacked(int horizontal, int vertical)
@@ -2130,8 +2473,6 @@ namespace EnochianChess
                 graphics.FillRectangle(chessboardSelectedBrush, x + horizontal * sizeOfCell, y + vertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.DrawRectangle(chessboardPen, x + horizontal * sizeOfCell, y + vertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.Dispose();
-
-                //     chessboardPicturebox.Refresh();
             }
 
             public void MakeThisCellUsual(int horizontal, int vertical)
@@ -2155,7 +2496,6 @@ namespace EnochianChess
                         graphHorizontal = horizontal;
                     }
                 }
-
                 if (vertical == 9)
                 {
                     vertical = 8;
@@ -2188,8 +2528,6 @@ namespace EnochianChess
                 graphics.FillRectangle(chessboardSelectedBrush, x + graphHorizontal * sizeOfCell, y + graphVertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.DrawRectangle(chessboardPen, x + graphHorizontal * sizeOfCell, y + graphVertical * sizeOfCell, sizeOfCell, sizeOfCell);
                 graphics.Dispose();
-
-                //    chessboardPicturebox.Refresh();
             }
 
             public Bitmap GetChessboardBitmap()
@@ -2207,7 +2545,6 @@ namespace EnochianChess
                 picturebox.Image = chessboardBitmap;
                 picturebox.Refresh();
             }
-
 
 
             private void DrawChessboard()
@@ -2289,9 +2626,19 @@ namespace EnochianChess
                 return statusBar;
             }
 
-            private char GetHorizontalChar(int horizontal)
+            public char GetHorizontalChar(int horizontal)
             {
                 return indexToChar[horizontal];
+            }
+
+            public void SendLogToGame(string newLog)
+            {
+                game.AddStringToLog(newLog);
+            }
+
+            public Player GetPlayerObject(Players player)
+            {
+                return game.GetPlayerObject(player);
             }
 
             public void WriteInformationInStatusBar(int mouseX, int mouseY)
@@ -2335,7 +2682,7 @@ namespace EnochianChess
 
             //for selecting/clicking
 
-            public void ClickOnChessboard(int mouseX, int mouseY)
+            public void ClickOnChessboard(int mouseX, int mouseY, Players player)
             {
                 int horizontal, vertical;
                 horizontal = mouseX / sizeOfCell;
@@ -2365,9 +2712,13 @@ namespace EnochianChess
                                     selectedChessmanStr = "";
                                     selectedChessman = null;
                                     wasAttack = true;
+                                    //turn happened
+                                    game.ToggleTurn();
                                 }
                             }
-                            if (!wasAttack)
+                            //is rightfully select
+                            if ((!wasAttack) && 
+                                (player == GetChessmanOnCoordinates(horizontal, vertical).GetChessmanOwner()))
                             {
                                 selectedChessman = GetChessmanOnCoordinates(horizontal, vertical);
                                 selectedChessmanStr = selectedChessman.GetNameOfChessmanRussianNominative() + ' ';
@@ -2395,6 +2746,8 @@ namespace EnochianChess
                             if (selectedChessman.IsThatPossibleMove(horizontal, vertical))
                             {
                                 selectedChessman.MoveChessman(horizontal, vertical);
+                                //turn happened
+                                game.ToggleTurn();
                             }
                             selectedChessman = null;
                         }
@@ -2411,78 +2764,22 @@ namespace EnochianChess
             //creating array of objects for resizing
             labelGroup = new Label[5] { label1, label2, label3, label4, label5 };
             buttonGroup = new Button[2] { button1, button2 };
+            //creating game
+            InterfaceElements gameParametres = new InterfaceElements();
+            gameParametres.chessboardPic = pictureBox1;
+            gameParametres.logBar = richTextBox1;
+            gameParametres.lostChessmenPic = pictureBox3;
+            gameParametres.takenChessmenPic = pictureBox2;
+            gameParametres.prisonersChangeButton = button2;
+            gameParametres.surrenderButton = button1;
+            gameParametres.statusBar = label4;
+            gameParametres.turnBar = label1;
+            game = new Game(gameParametres);
 
             //activate resize for chessboard
             tableLayoutPanel1.SizeChanged += GameForm_ResizeEnd;
             chessmenInfo = new ChessmenInfo(arrangement);
             buttonBackground = Properties.Resources.ButtonBlue;
-        }
-
-
-        public void nextTurn()
-        {
-            switch (turn)
-            {
-                case 0:
-                    label1.Text = "Ходит красный игрок";
-                    label1.ForeColor = Color.FromArgb(192, 0, 0);
-                    label4.ForeColor = Color.FromArgb(192, 0, 0);
-                    button1.BackColor = Color.FromArgb(192, 0, 0);
-                    button2.BackColor = Color.FromArgb(192, 0, 0);
-                    buttonBackground = Properties.Resources.ButtonRed;
-                    turn += 1;
-                    break;
-                case 1:
-                    label1.Text = "Ходит черный игрок";
-                    label1.ForeColor = Color.FromArgb(157, 157, 158);
-                    label4.ForeColor = Color.FromArgb(157, 157, 158);
-                    button1.BackColor = Color.FromArgb(157, 157, 158);
-                    button2.BackColor = Color.FromArgb(157, 157, 158);
-                    buttonBackground.Dispose();
-                    buttonBackground = Properties.Resources.ButtonGray;
-                    turn += 1;
-                    break;
-                case 2:
-                    label1.Text = "Ходит желтый игрок";
-                    label1.ForeColor = Color.FromArgb(255, 237, 0);
-                    label4.ForeColor = Color.FromArgb(255, 237, 0);
-                    button1.BackColor = Color.FromArgb(255, 237, 0);
-                    button2.BackColor = Color.FromArgb(255, 237, 0);
-                    buttonBackground.Dispose();
-                    buttonBackground = Properties.Resources.ButtonYellow;
-                    turn += 1;
-                    break;
-                case 3:
-                    label1.Text = "Ходит синий игрок";
-                    label1.ForeColor = Color.FromArgb(0, 160, 227);
-                    label4.ForeColor = Color.FromArgb(0, 160, 227);
-                    button1.BackColor = Color.FromArgb(0, 160, 227);
-                    button2.BackColor = Color.FromArgb(0, 160, 227);
-                    buttonBackground.Dispose();
-                    buttonBackground = Properties.Resources.ButtonBlue;
-                    turn = 0;
-                    break;
-            }
-        }
-
-        private void initializePictureBox(PictureBox picturebox)
-        {
-            Graphics graphics;
-            Bitmap bitmap;
-            if (picturebox.Image != null)
-            {
-                graphics = Graphics.FromImage(picturebox.Image);
-                graphics.FillRectangle(Brushes.White, 0, 0, picturebox.Width, picturebox.Height);
-                graphics.Dispose();
-            }
-            else
-            {
-                bitmap = new Bitmap(picturebox.Width, picturebox.Height);
-                graphics = Graphics.FromImage(bitmap);
-                graphics.FillRectangle(Brushes.White, 0, 0, picturebox.Width, picturebox.Height);
-                graphics.Dispose();
-                picturebox.Image = bitmap;
-            }
         }
 
         private void button1_MouseEnter(object sender, EventArgs e)
@@ -2503,32 +2800,8 @@ namespace EnochianChess
 
         private void новаяToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
-            //if (pictureBox1.Image != null)
-            initializePictureBox(pictureBox1);
-
-            chessboard = new Chessboard(0, 0, pictureBox1.Width, pictureBox1.Height, arrangement);
-            chessboard.SetStatusBar(label4);
-
-            pictureBox1.MouseMove += pictureBox1_MouseMove;
-            chessboard.ShowChessboard(pictureBox1);
-            //         pictureBox1.Image = chessboard.GetChessboardBitmap();
+            game.StartNewGame();
         }
-
-        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
-        {
-
-            int x = e.X;
-            int y = e.Y;
-            chessboard.WriteInformationInStatusBar(x, y);
-        }
-
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-            nextTurn();
-        }
-
 
         private void label4_Click(object sender, EventArgs e)
         {
@@ -2566,49 +2839,23 @@ namespace EnochianChess
             }
         }
 
-        private void clearToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            initializePictureBox(pictureBox1);
-        }
-
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
+        //form resize
         private void GameForm_ResizeEnd(object sender, EventArgs e)
         {
             foreach (Label label in labelGroup)
             {
                 label.Font = new Font(label.Font.Name, Math.Min(label.Height / 3, label.Width / 3), FontStyle.Regular);
             }
-
             foreach (Button button in buttonGroup)
             {
                 button.Font = new Font(button.Font.Name, Math.Min(button.Height / 6, button.Width / 6), FontStyle.Regular);
             }
             tableLayoutPanel1.Width = 9 * GameForm.ActiveForm.Width / 10;
             tableLayoutPanel1.Height = 9 * GameForm.ActiveForm.Height / 10 - menuStrip1.Height * 2;
-            if (chessboard != null)
+            if (game.IsGameStarted())
             {
-                chessboard.ResizeChessboard(0, 0, pictureBox1.Width, pictureBox1.Height);
-                chessboard.ShowChessboard(pictureBox1);
-                //pictureBox1.Image = chessboard.GetChessboardBitmap();
-                //pictureBox1.BackgroundImageLayout = ImageLayout.Stretch;
+                game.ResizeChessboard();
             }
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
-        {
-            int x = e.X;
-            int y = e.Y;
-            chessboard.ClickOnChessboard(x, y);
-            //  chessboard.ShowChessboard(pictureBox1);
         }
 
         private void GameForm_FormClosed(object sender, FormClosedEventArgs e)

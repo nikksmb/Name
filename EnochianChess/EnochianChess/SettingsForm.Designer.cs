@@ -43,7 +43,8 @@
             this.label6 = new System.Windows.Forms.Label();
             this.button4 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
-            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.button6 = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -69,6 +70,8 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.button6);
+            this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.button3);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.button2);
@@ -77,7 +80,7 @@
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Location = new System.Drawing.Point(12, 44);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(248, 140);
+            this.groupBox1.Size = new System.Drawing.Size(248, 172);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Настройки цвета";
@@ -90,6 +93,7 @@
             this.button3.TabIndex = 5;
             this.button3.Text = " ";
             this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // label4
             // 
@@ -108,6 +112,7 @@
             this.button2.TabIndex = 3;
             this.button2.Text = " ";
             this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // label3
             // 
@@ -126,26 +131,32 @@
             this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Location = new System.Drawing.Point(266, 44);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(248, 140);
+            this.groupBox2.Size = new System.Drawing.Size(277, 172);
             this.groupBox2.TabIndex = 6;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Выбор расстановки по умолчанию";
             // 
             // comboBox2
             // 
-            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox2.DropDownWidth = 250;
             this.comboBox2.Items.AddRange(new object[] {
-            "Красный",
-            "Черный",
-            "Желтый",
-            "Синий"});
+            "Air of Fire and of Earth - Воздух Огня и Земли",
+            "Air of Air and of Water - Воздух Воздуха и Земли",
+            "Fire of Air and of Water - Огонь Воздуха и Воды",
+            "Water of Air and of Water - Вода Воздуха и Воды",
+            "Earth of Fire and of Earth - Земля Огня и Земли",
+            "Earth of Air and of Water - Земля Воздуха и Воды",
+            "Fire of Fire and of Earth - Огонь Огня и Земли",
+            "Water of Fire and of Earth - Вода Огня и Земли"});
             this.comboBox2.Location = new System.Drawing.Point(120, 69);
             this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(121, 21);
+            this.comboBox2.Size = new System.Drawing.Size(151, 21);
             this.comboBox2.TabIndex = 4;
             // 
             // comboBox1
             // 
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Items.AddRange(new object[] {
             "Красный",
@@ -154,7 +165,7 @@
             "Синий"});
             this.comboBox1.Location = new System.Drawing.Point(121, 22);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 21);
+            this.comboBox1.Size = new System.Drawing.Size(150, 21);
             this.comboBox1.TabIndex = 3;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
@@ -183,6 +194,7 @@
             this.button4.TabIndex = 7;
             this.button4.Text = "Сохранить";
             this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // button5
             // 
@@ -192,12 +204,32 @@
             this.button5.TabIndex = 8;
             this.button5.Text = "Отмена";
             this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
+            // 
+            // button6
+            // 
+            this.button6.Location = new System.Drawing.Point(160, 118);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(25, 25);
+            this.button6.TabIndex = 7;
+            this.button6.Text = " ";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(6, 124);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(132, 13);
+            this.label2.TabIndex = 6;
+            this.label2.Text = "Цвет атакованного поля";
             // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(532, 329);
+            this.ClientSize = new System.Drawing.Size(554, 329);
             this.Controls.Add(this.button5);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.groupBox2);
@@ -205,6 +237,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "SettingsForm";
             this.Text = "Настройки";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.SettingsForm_FormClosed);
             this.Load += new System.EventHandler(this.SettingsForm_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -230,6 +263,7 @@
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.ColorDialog colorDialog1;
+        private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.Label label2;
     }
 }

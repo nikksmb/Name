@@ -465,13 +465,18 @@ namespace EnochianChess
             public bool IsInGame { get; private set; }
             private Players player;
             private Players controller;
+            private Player ally;
             private List<Chessman> listOfChessmen;
             private List<Chessman> listOfLostChessmen;
             private List<Chessman> listOfTakenChessmen;
             private PictureBox takenChessmenPic;
             private PictureBox lostChessmenPic;
+            public bool IsSurrender { private set; get; }
+            private bool check;
+            private bool canKingMove;
+            private string playersName;
 
-            public Player(Players player, PictureBox takenPic, PictureBox lostPic)
+            public Player(Players player, PictureBox takenPic, PictureBox lostPic, string name)
             {
                 listOfChessmen = new List<Chessman>();
                 listOfLostChessmen = new List<Chessman>();
@@ -481,6 +486,20 @@ namespace EnochianChess
                 takenChessmenPic = takenPic;
                 lostChessmenPic = lostPic;
                 IsInGame = true;
+                check = false;
+                canKingMove = true;
+                playersName = name;
+            }
+
+            //this is almost useless method in game logic
+            public void SetAlly(Player allyLogical)
+            {
+                ally = allyLogical;
+            }
+
+            public Player GetAlly()
+            {
+                return ally;
             }
 
             public void SetController(Players player)
@@ -488,9 +507,54 @@ namespace EnochianChess
                 controller = player;
             }
 
+            public Players GetPlayersIdentifier()
+            {
+                return player;
+            }
+
+            public string GetName()
+            {
+                return playersName;
+            }
+
             public void AddChessman(Chessman chessman)
             {
                 listOfChessmen.Add(chessman);
+            }
+
+            public void KingIsDead()
+            {
+                foreach (Chessman chessman in listOfChessmen)
+                {
+                    chessman.SetFrozenState(true);
+                }
+                IsInGame = false;
+                MessageBox.Show(playersName + " потерял короля и вышел из игры. Вернуться в игру он сможет только в случае обмена пленными.","Внимание");
+            }
+
+            public void SetCheckState(bool state)
+            {
+                check = state;
+            }
+
+            public bool GetCheckState()
+            {
+                return check;
+            }
+
+            public void SetKingMovementState(bool state)
+            {
+                canKingMove = state;
+            }
+
+            public bool CanKingMove()
+            {
+                return canKingMove;
+            }
+
+            public void SetSurrendingState(bool surrending)
+            {
+                IsSurrender = surrending;
             }
 
             public void AddLostChessman(Chessman chessman)
@@ -501,6 +565,18 @@ namespace EnochianChess
             public void AddTakenChessman(Chessman chessman)
             {
                 listOfTakenChessmen.Add(chessman);
+            }
+
+            public void ShowMessages()
+            {
+                if (check)
+                {
+                    MessageBox.Show("Вам объявлен шах.","Внимание");
+                }
+                if (IsSurrender)
+                {
+                    MessageBox.Show("Данный игрок вышел из игры. Его фигурами управляет товарищ по команде", "Внимание");
+                }
             }
 
             //graphics
@@ -539,6 +615,13 @@ namespace EnochianChess
         //GAME
         public class Game
         {
+            //possible game endings
+            const int NO_WINNERS = 0;
+            const int WON_RED_AND_YELLOW_TEAM = 1;
+            const int WON_BLACK_AND_BLUE_TEAM = 5;
+
+
+
             private string logTurn;  //could be colorful
             private Chessboard chessboard;
             private Players turn; //current turn
@@ -570,18 +653,70 @@ namespace EnochianChess
 
             public void StartNewGame()
             {
-                redPlayer = new Player(Players.Red, takenChessmenPic, lostChessmenPic);
-                yellowPlayer = new Player(Players.Yellow, takenChessmenPic, lostChessmenPic);
-                blackPlayer = new Player(Players.Black, takenChessmenPic, lostChessmenPic);
-                bluePlayer = new Player(Players.Blue, takenChessmenPic, lostChessmenPic);
+                redPlayer = new Player(Players.Red, takenChessmenPic, lostChessmenPic, "Красный игрок");
+                yellowPlayer = new Player(Players.Yellow, takenChessmenPic, lostChessmenPic, "Желтый игрок");
+                redPlayer.SetAlly(yellowPlayer);
+                yellowPlayer.SetAlly(redPlayer);
+                blackPlayer = new Player(Players.Black, takenChessmenPic, lostChessmenPic, "Черный игрок");
+                bluePlayer = new Player(Players.Blue, takenChessmenPic, lostChessmenPic, "Синий игрок");
+                blackPlayer.SetAlly(bluePlayer);
+                bluePlayer.SetAlly(blackPlayer);
+                //dopilit'
                 turn = Players.Yellow;
+
+                logTurn = "";
                 chessboard = new Chessboard(this, 0, 0, chessboardPic.Width, chessboardPic.Height, arrangement);
                 chessboard.SetStatusBar(statusBar);
+                chessboardPic.MouseClick -= chessboardPic_MouseClick;
                 chessboardPic.MouseClick += chessboardPic_MouseClick;
+                chessboardPic.MouseMove -= chessboardPic_MouseMove;
                 chessboardPic.MouseMove += chessboardPic_MouseMove;
+                surrenderButton.Click -= surrenderButton_Click;
+                surrenderButton.Click += surrenderButton_Click;
+                prisonersChangeButton.Click -= prisonersChangeButton_Click;
+                prisonersChangeButton.Click += prisonersChangeButton_Click;
                 chessboard.ShowChessboard(chessboardPic);
                 numberOfTurn = 1;
                 //dopilit'
+            }
+
+            private void prisonersChangeButton_Click(object sender, EventArgs e)
+            {
+                if (DialogResult.Yes == MessageBox.Show("Обмен пленными позволит вернуть в игру потерявших королей игроков." +
+                        " Согласие на это должны дать оба оставшихся игрока.\n Оба игрока согласны на обмен пленными?", "Обмен пленными", MessageBoxButtons.YesNo))
+                {
+                    //dopilit'
+
+
+                    prisonersChangeButton.Enabled = false;
+                }
+            }
+
+            private void surrenderButton_Click(object sender, EventArgs e)
+            {
+                if (!GetPlayerObject(turn).IsSurrender)
+                {
+                    if (DialogResult.Yes == MessageBox.Show("Вы уверены, что хотите сдаться и прекратить свою игру?" +
+                        " Ваши фигуры перейдут под контроль союзника, но он сможет ходить ими только во время хода соответствующего цвета.", "Сдаться", MessageBoxButtons.YesNo))
+                    {
+                        //here is surrender
+                        //surrending gives control to ally, without freezing. Exception - only king left.
+                        Player surrendingPlayer = GetPlayerObject(turn);
+                        surrendingPlayer.SetSurrendingState(true);
+                        logTurn += surrendingPlayer.GetName() + " сдался.\n";
+                        //his ally now controlling his chessmen, but infact almost nothing has changed
+                        surrendingPlayer.SetController(surrendingPlayer.GetAlly().GetPlayersIdentifier());
+                        if ((surrendingPlayer.GetAlly().IsSurrender) || (!surrendingPlayer.GetAlly().IsInGame))
+                        {
+                            FinishGame((int)surrendingPlayer.GetPlayersIdentifier() + (int)surrendingPlayer.GetAlly().GetPlayersIdentifier());
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Данный игрок уже сдался. Если вы хотите сдаться, сдавайтесь на своем ходе.","Внимание");
+                }
             }
 
             private void chessboardPic_MouseClick(object sender, MouseEventArgs e)
@@ -597,6 +732,12 @@ namespace EnochianChess
                 int y = e.Y;
                 chessboard.WriteInformationInStatusBar(x, y);
             }
+
+            public void EnablePrisonersChange()
+            {
+                prisonersChangeButton.Enabled = true;
+            }
+
 
             public void SaveGame()
             {
@@ -619,6 +760,9 @@ namespace EnochianChess
                         }
                         else
                         {
+                            turn = Players.Black;
+                            ToggleTurn();
+                            return;
                         }
                         break;
                     case Players.Black:
@@ -630,6 +774,9 @@ namespace EnochianChess
                         }
                         else
                         {
+                            turn = Players.Yellow;
+                            ToggleTurn();
+                            return;
                         }
                         break;
                     case Players.Yellow:
@@ -641,6 +788,9 @@ namespace EnochianChess
                         }
                         else
                         {
+                            turn = Players.Blue;
+                            ToggleTurn();
+                            return;
                         }
                         break;
                     case Players.Blue:
@@ -652,13 +802,18 @@ namespace EnochianChess
                         }
                         else
                         {
+                            turn = Players.Red;
+                            ToggleTurn();
+                            return;
                         }
                         break;
                 }
                 InterfaceChangeWhileTurn();
+                GetPlayerObject(turn).ShowMessages();
                 numberOfTurn++;
-
             }
+
+            
 
             private void InterfaceChangeWhileTurn()
             {
@@ -738,6 +893,31 @@ namespace EnochianChess
                         return null;
                 }
             }
+
+            private void FinishGame(int finishCode)
+            {
+                chessboardPic.MouseClick -= chessboardPic_MouseClick;
+                chessboardPic.MouseMove -= chessboardPic_MouseMove;
+                surrenderButton.Click -= surrenderButton_Click;
+                switch (finishCode)
+                {
+                    case NO_WINNERS:
+                        MessageBox.Show("Ничейная ситуация. Игра завершена.","Конец игры");
+                        logTurn += "Ничейная ситуация. Конец игры.";
+                        break;
+                    case WON_RED_AND_YELLOW_TEAM:
+                        MessageBox.Show("Победу одержала команда Желтого и Красного игрока. Игра завершена.", "Конец игры");
+                        logTurn += "Победу одержала команда Желтого и Красного игрока. Конец игры.";
+                        break;
+                    case WON_BLACK_AND_BLUE_TEAM:
+                        MessageBox.Show("Победу одержала команда Синего и Черного игрока. Игра завершена.", "Конец игры");
+                        logTurn += "Победу одержала команда Синего и Черного игрока. Конец игры.";
+                        break;
+                    default:
+                        break;
+                }
+
+            }
         }
 
         //CHESSMAN
@@ -752,6 +932,11 @@ namespace EnochianChess
 
             //chessman is not taken
             protected bool isInGame;
+
+            protected bool isPossibleToMove;
+
+            //chessman is frozen after surrending of player or losing king
+            protected bool isFrozen;
 
             //current chessboard
             protected Chessboard chessboard;
@@ -781,6 +966,7 @@ namespace EnochianChess
                 this.chessboard = chessboard;
                 this.nameOfChessman = chessmanParameter.kindOfChessman;
                 this.isInGame = true;
+                this.isFrozen = false;
                 this.ruAttack = chessmanParameter.ruAttack;
                 this.ruMove = chessmanParameter.ruMove;
                 ownerObject = chessboard.GetPlayerObject(player);
@@ -854,6 +1040,11 @@ namespace EnochianChess
                 return player;
             }
 
+            public bool IsInGame()
+            {
+                return isInGame;
+            }
+
             public abstract void ShowPossibleMovements(bool deselect);
 
             public abstract void ShowPossibleAttacks(bool deselect);
@@ -905,10 +1096,8 @@ namespace EnochianChess
                 bool result = true;
                 if (this.player == player)
                     return false;
-
                 int sum = (int)this.player + (int)player;
-                result = ((sum != 1) && (sum != 5));
-
+                result = ((sum != 1) && (sum != 5) && (!isFrozen));
                 return result;
             }
 
@@ -919,9 +1108,6 @@ namespace EnochianChess
                 vertical = -1;
                 isInGame = false;
                 ownerObject.AddLostChessman(this);
-                //dopilit'
-                //class "Player" maybe
-
             }
 
             public virtual Point GetCoordinates()
@@ -932,6 +1118,15 @@ namespace EnochianChess
                 return result;
             }
 
+            public void SetFrozenState(bool frozen)
+            {
+                isFrozen = frozen;
+            }
+
+            public bool CanMoveOrAttack()
+            {
+                return isPossibleToMove;
+            }
         }
 
         //KING
@@ -1043,6 +1238,7 @@ namespace EnochianChess
                 graphHorizontal = horizontal;
                 graphVertical = vertical;
                 ownerObject.AddLostChessman(this);
+                ownerObject.KingIsDead();/**/
                 //dopilit'
                 //class "Player" maybe
 
@@ -1050,6 +1246,7 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -1069,6 +1266,7 @@ namespace EnochianChess
                         if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                             (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                         {
+                            isPossibleToMove = true;
                             if (deselect)
                             {
                                 chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1112,6 +1310,7 @@ namespace EnochianChess
             public override void ShowPossibleAttacks(bool deselect)
             {
                 int newHorizontal, newVertical;
+                isPossibleToMove = false;
                 for (int i = -1; i <= 1; i++)
                 {
                     for (int j = -1; j <= 1; j++)
@@ -1123,6 +1322,7 @@ namespace EnochianChess
                                 (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                                 (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                             {
+                                isPossibleToMove = true;
                                 if (deselect)
                                 {
                                     chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1179,6 +1379,7 @@ namespace EnochianChess
             public override void ShowPossibleMovements(bool deselect)
             {
                 int newHorizontal, newVertical;
+                isPossibleToMove = false;
                 if (deselect)
                 {
                     chessboard.MakeThisCellUsual(horizontal, vertical);
@@ -1197,6 +1398,7 @@ namespace EnochianChess
                         if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                             (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                         {
+                            isPossibleToMove = true;
                             if (deselect)
                             {
                                 chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1240,6 +1442,7 @@ namespace EnochianChess
             public override void ShowPossibleAttacks(bool deselect)
             {
                 int newHorizontal, newVertical;
+                isPossibleToMove = false;
                 for (int i = -2; i <= 2; i += 2)
                 {
                     for (int j = -2; j <= 2; j += 2)
@@ -1251,6 +1454,7 @@ namespace EnochianChess
                                 (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                                 (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                             {
+                                isPossibleToMove = true;
                                 if (deselect)
                                 {
                                     chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1305,6 +1509,7 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -1326,6 +1531,7 @@ namespace EnochianChess
                             if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                                    (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                             {
+                                isPossibleToMove = true;
                                 if (deselect)
                                 {
                                     chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1378,6 +1584,7 @@ namespace EnochianChess
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -1407,6 +1614,7 @@ namespace EnochianChess
                                  (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                                  (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                                 {
+                                    isPossibleToMove = true;
                                     if (deselect)
                                     {
                                         chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1475,6 +1683,7 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -1504,6 +1713,7 @@ namespace EnochianChess
                             if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                                 (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                             {
+                                isPossibleToMove = true;
                                 if (deselect)
                                 {
                                     chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1557,6 +1767,7 @@ namespace EnochianChess
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 for (int k = 0; k <= 1; k++)
                 {
@@ -1580,6 +1791,7 @@ namespace EnochianChess
                                     (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                                     (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                                 {
+                                    isPossibleToMove = true;
                                     if (deselect)
                                     {
                                         chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1647,6 +1859,7 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -1666,6 +1879,7 @@ namespace EnochianChess
                         if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                         {
+                            isPossibleToMove = true;
                             if (deselect)
                             {
                                 chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1690,6 +1904,7 @@ namespace EnochianChess
                         if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                                (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                         {
+                            isPossibleToMove = true;
                             if (deselect)
                             {
                                 chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1760,6 +1975,7 @@ namespace EnochianChess
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -1787,6 +2003,7 @@ namespace EnochianChess
                              (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                              (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                             {
+                                isPossibleToMove = true;
                                 if (deselect)
                                 {
                                     chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1819,6 +2036,7 @@ namespace EnochianChess
                              (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                              (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player)))
                             {
+                                isPossibleToMove = true;
                                 if (deselect)
                                 {
                                     chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1837,7 +2055,7 @@ namespace EnochianChess
             }
 
             public override bool IsThatPossibleAttack(int horizontal, int vertical)
-            {
+            {/**/
                 bool result = false;
                 int newHorizontal, newVertical;
                 for (int j = -1; j <= 1; j += 2)
@@ -1863,8 +2081,8 @@ namespace EnochianChess
 
                                     return result;
                                 }
-                                break;
                             }
+                            break;
                         }
                     }
                 }
@@ -1890,8 +2108,9 @@ namespace EnochianChess
 
                                     return result;
                                 }
-                                break;
+                                
                             }
+                            break;
                         }
                     }
                 }
@@ -1912,6 +2131,7 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -1927,6 +2147,7 @@ namespace EnochianChess
                 if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                     (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                 {
+                    isPossibleToMove = true;
                     if (deselect)
                     {
                         chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -1958,6 +2179,7 @@ namespace EnochianChess
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 newVertical = this.vertical + 1;
                 for (int i = -1; i <= 1; i += 2)
@@ -1967,6 +2189,7 @@ namespace EnochianChess
                        (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                        ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
                     {
+                        isPossibleToMove = true;
                         if (deselect)
                         {
                             chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -2014,6 +2237,7 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -2029,6 +2253,7 @@ namespace EnochianChess
                 if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                     (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                 {
+                    isPossibleToMove = true;
                     if (deselect)
                     {
                         chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -2060,6 +2285,7 @@ namespace EnochianChess
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 newVertical = this.vertical - 1;
                 for (int i = -1; i <= 1; i += 2)
@@ -2069,6 +2295,7 @@ namespace EnochianChess
                        (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                        ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
                     {
+                        isPossibleToMove = true;
                         if (deselect)
                         {
                             chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -2116,6 +2343,7 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -2131,6 +2359,7 @@ namespace EnochianChess
                 if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                     (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                 {
+                    isPossibleToMove = true;
                     if (deselect)
                     {
                         chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -2161,6 +2390,7 @@ namespace EnochianChess
             }
             public override void ShowPossibleAttacks(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 newHorizontal = this.horizontal - 1;
                 for (int i = -1; i <= 1; i += 2)
@@ -2170,6 +2400,7 @@ namespace EnochianChess
                        (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                        ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
                     {
+                        isPossibleToMove = true;
                         if (deselect)
                         {
                             chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -2217,6 +2448,7 @@ namespace EnochianChess
 
             public override void ShowPossibleMovements(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 if (deselect)
                 {
@@ -2232,6 +2464,7 @@ namespace EnochianChess
                 if (chessboard.IsThisCellExists(newHorizontal, newVertical) &&
                     (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) == null))
                 {
+                    isPossibleToMove = true;
                     if (deselect)
                     {
                         chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -2263,6 +2496,7 @@ namespace EnochianChess
 
             public override void ShowPossibleAttacks(bool deselect)
             {
+                isPossibleToMove = false;
                 int newHorizontal, newVertical;
                 newHorizontal = this.horizontal + 1;
                 for (int i = -1; i <= 1; i += 2)
@@ -2272,6 +2506,7 @@ namespace EnochianChess
                        (chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical) != null) &&
                        ((chessboard.GetChessmanOnCoordinates(newHorizontal, newVertical).IsThatEnemyChessman(this.player))))
                     {
+                        isPossibleToMove = true;
                         if (deselect)
                         {
                             chessboard.MakeThisCellUsual(newHorizontal, newVertical);
@@ -2330,6 +2565,7 @@ namespace EnochianChess
             private Color colorOfLightCell, colorOfDarkCell, colorOfSelectedCell, colorOfAttackedCell;
 
             private Chessman[] currentState;
+            private King[] kings;
             private int numberOfArrangement;
 
             private Label statusBar;
@@ -2370,7 +2606,8 @@ namespace EnochianChess
             //There are 8 variants of different first positions of chessmen. Possibly this class should
             //get users options from record
             {
-                int k = 0;
+                int k = 0, index = 0;
+                kings = new King[4];
                 ChessmenInfo chessmanInfo = new ChessmenInfo(numberOfArrangement);
                 currentState = new Chessman[COUNT_OF_CHESSMEN];
                 for (Players i = Players.Yellow; i <= Players.Black; i++)
@@ -2378,6 +2615,11 @@ namespace EnochianChess
                     for (ChessmenNames j = ChessmenNames.King; j <= ChessmenNames.PawnOfTower; j++)
                     {
                         currentState[k] = chessmanInfo.CreateNewChessman(i.ToString(), j.ToString(), this);
+                        if (currentState[k].GetChessmanName() == ChessmenNames.King)
+                        {
+                            kings[index] = (King)currentState[k];
+                            index++;
+                        }
                         k++;
                     }
                 }
@@ -2424,6 +2666,55 @@ namespace EnochianChess
                 }
                 return result;
             }
+
+            //Analyse for check
+            private void AnalyseKings()
+            {
+                Point coordinates;
+                bool withoutCheck;
+                int lostKings = 0;
+                for (int j = 0; j < 4; j++)
+                {
+                    withoutCheck = true;
+                    coordinates = kings[j].GetRealCoordinates();
+                    for (int i = 0; i < COUNT_OF_CHESSMEN; i++)
+                    {
+                        if (currentState[i].IsInGame())
+                        {
+                            if (currentState[i].IsThatPossibleAttack(coordinates.X, coordinates.Y))
+                            {
+                                game.GetPlayerObject(kings[j].GetChessmanOwner()).SetCheckState(true);
+                                withoutCheck = false;
+                                kings[j].ShowPossibleMovements(true);
+                                if (!kings[j].CanMoveOrAttack())
+                                {
+                                    game.GetPlayerObject(kings[j].GetChessmanOwner()).SetKingMovementState(false);
+                                }
+                                else
+                                {
+                                    game.GetPlayerObject(kings[j].GetChessmanOwner()).SetKingMovementState(true);
+                                }
+                            }
+                        }
+                    }
+                    if (withoutCheck)
+                    {
+                        game.GetPlayerObject(kings[j].GetChessmanOwner()).SetCheckState(false);
+                        game.GetPlayerObject(kings[j].GetChessmanOwner()).SetKingMovementState(true);
+                    }
+                    if (!kings[j].IsInGame())
+                    {
+                        lostKings++;
+                    }
+                }
+                if (lostKings == 2)
+                {
+                    //enable of prisoners change
+                    game.EnablePrisonersChange();
+                }
+            }
+
+
 
             //Graphics for chessboard
 
@@ -2712,6 +3003,7 @@ namespace EnochianChess
                                     selectedChessmanStr = "";
                                     selectedChessman = null;
                                     wasAttack = true;
+                                    AnalyseKings();
                                     //turn happened
                                     game.ToggleTurn();
                                 }
@@ -2720,10 +3012,48 @@ namespace EnochianChess
                             if ((!wasAttack) && 
                                 (player == GetChessmanOnCoordinates(horizontal, vertical).GetChessmanOwner()))
                             {
-                                selectedChessman = GetChessmanOnCoordinates(horizontal, vertical);
-                                selectedChessmanStr = selectedChessman.GetNameOfChessmanRussianNominative() + ' ';
-                                selectedChessman.ShowPossibleMovements(false);
-                                selectedChessman.ShowPossibleAttacks(false);
+                                //is check and could king move
+                                if (game.GetPlayerObject(player).GetCheckState())
+                                {
+                                    if (!(game.GetPlayerObject(player).CanKingMove()))
+                                    {
+                                        if (GetChessmanOnCoordinates(horizontal, vertical).GetChessmanName() != ChessmenNames.King)
+                                        {
+                                            selectedChessman = GetChessmanOnCoordinates(horizontal, vertical);
+                                            selectedChessmanStr = selectedChessman.GetNameOfChessmanRussianNominative() + ' ';
+                                            selectedChessman.ShowPossibleMovements(false);
+                                            selectedChessman.ShowPossibleAttacks(false);
+                                        }
+                                        else
+                                        {
+                                            MessageBox.Show("Вам объявлен шах, но король не может двигаться.", "Внимание");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (GetChessmanOnCoordinates(horizontal, vertical).GetChessmanName() != ChessmenNames.King)
+                                        {
+                                            MessageBox.Show("Вам объявлен шах. Ходить может только король.", "Внимание");
+                                        }
+                                        else
+                                        {
+                                            selectedChessman = GetChessmanOnCoordinates(horizontal, vertical);
+                                            selectedChessmanStr = selectedChessman.GetNameOfChessmanRussianNominative() + ' ';
+                                            selectedChessman.ShowPossibleMovements(false);
+                                            selectedChessman.ShowPossibleAttacks(false);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    //if (GetChessmanOnCoordinates(horizontal, vertical).CanMoveOrAttack())
+                                    //{
+                                        selectedChessman = GetChessmanOnCoordinates(horizontal, vertical);
+                                        selectedChessmanStr = selectedChessman.GetNameOfChessmanRussianNominative() + ' ';
+                                        selectedChessman.ShowPossibleMovements(false);
+                                        selectedChessman.ShowPossibleAttacks(false);
+                                    //}
+                                }                                
                             }
                         }
                         else
@@ -2746,6 +3076,7 @@ namespace EnochianChess
                             if (selectedChessman.IsThatPossibleMove(horizontal, vertical))
                             {
                                 selectedChessman.MoveChessman(horizontal, vertical);
+                                AnalyseKings();
                                 //turn happened
                                 game.ToggleTurn();
                             }
@@ -2801,42 +3132,6 @@ namespace EnochianChess
         private void новаяToolStripMenuItem_Click(object sender, EventArgs e)
         {
             game.StartNewGame();
-        }
-
-        private void label4_Click(object sender, EventArgs e)
-        {
-            arrangement += 1;
-            if (arrangement == 8)
-            {
-                arrangement = 0;
-            }
-            switch (arrangement)
-            {
-                case 0:
-                    label4.Text = "Air of Fire and of Earth";
-                    break;
-                case 1:
-                    label4.Text = "Air of Air and of Water";
-                    break;
-                case 2:
-                    label4.Text = "Fire of Air and of Water";
-                    break;
-                case 3:
-                    label4.Text = "Water of Air and of Water";
-                    break;
-                case 4:
-                    label4.Text = "Earth of Fire and of Earth";
-                    break;
-                case 5:
-                    label4.Text = "Earth of Air and of Water";
-                    break;
-                case 6:
-                    label4.Text = "Fire of Fire and of Earth";
-                    break;
-                case 7:
-                    label4.Text = "Water of Fire and of Earth";
-                    break;
-            }
         }
 
         //form resize

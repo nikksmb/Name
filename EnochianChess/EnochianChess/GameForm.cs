@@ -21,7 +21,7 @@ namespace EnochianChess
         static Bitmap buttonBackground;
 
         Game game;
-        ChessmenInfo chessmenInfo;
+        static ChessmenInfo chessmenInfo;
        // Chessboard chessboard;
 
         public struct ChessmenParameters
@@ -463,7 +463,7 @@ namespace EnochianChess
         public class Player
         {
             private Game game;
-            public bool IsInGame { get; private set; }
+            private string playersName;
             private Players player;
             private Players controller;
             private Player ally;
@@ -472,11 +472,13 @@ namespace EnochianChess
             private List<Chessman> listOfTakenChessmen;
             private PictureBox takenChessmenPic;
             private PictureBox lostChessmenPic;
+            public bool IsInGame { get; private set; }
             public bool IsSurrender { private set; get; }
             private bool check;
             private bool canKingMove;
-            private string playersName;
             private bool lastKing;
+            private bool enableTurningPawns;
+            private bool IsController { get; set; }
 
             public Player(Game game, Players player, PictureBox takenPic, PictureBox lostPic, string name)
             {
@@ -491,6 +493,7 @@ namespace EnochianChess
                 check = false;
                 canKingMove = true;
                 lastKing = false;
+                enableTurningPawns = false;
                 playersName = name;
                 this.game = game;
             }
@@ -509,6 +512,19 @@ namespace EnochianChess
             public void SetController(Players player)
             {
                 controller = player;
+                //also unfreeze, if required or not
+                foreach (Chessman chessman in listOfChessmen)
+                {
+                    chessman.SetFrozenState(false);
+                }
+                if (this.player != player)
+                {
+                    IsSurrender = true;
+                }
+                else
+                {
+                    IsSurrender = false;
+                }
             }
 
             public Players GetPlayersIdentifier()
@@ -536,11 +552,19 @@ namespace EnochianChess
                 listOfChessmen.Add(chessman);
             }
 
+            public void DeleteChessman(Chessman chessman)
+            {
+                listOfChessmen.Remove(chessman);
+            }
+
             public void KingIsDead()
             {
-                foreach (Chessman chessman in listOfChessmen)
+                if (player == controller)
                 {
-                    chessman.SetFrozenState(true);
+                    foreach (Chessman chessman in listOfChessmen)
+                    {
+                        chessman.SetFrozenState(true);
+                    }
                 }
                 IsInGame = false;
                 ally.SetLastKingState(true);
@@ -551,14 +575,82 @@ namespace EnochianChess
                     //so Chessboard will call forward line
 
                     //game.FinishGame((int)this.GetPlayersIdentifier() + (int)ally.GetPlayersIdentifier());
-                    
+
                 }
                 else
-                {                
+                {
                     //or allys king is still alive
-                    MessageBox.Show(playersName + " потерял короля и вышел из игры. Вернуться в игру он сможет только в случае обмена пленными.", "Внимание");
+                    if (player == controller)
+                    {
+                        MessageBox.Show(playersName + " потерял короля и вышел из игры. Вернуться в игру он сможет только в случае обмена пленными.", "Внимание");
+                        game.AddStringToLogBuffer(playersName + " выбывает из игры.\n", false);
+                    }
+                    else
+                    {
+                        MessageBox.Show(playersName + " потерял короля. Так как контролем над игроком обладает другой игрок, фигуры не замораживаются.", "Внимание");
+                    }
+                    if (IsController)
+                    {
+                        MessageBox.Show(playersName + " потерял короля, который владел контролем над союзником. Теперь контроль возвращается обратно.", "Внимание");
+                        ally.SetController(ally.GetPlayersIdentifier());
+                    }
                 }
-                game.AddStringToLogBuffer(playersName + " выбывает из игры.\n", false);
+            }
+
+            public bool PriorityPawn()
+            {
+                //dopilit'
+                int countOfQueens = 0;
+                int countOfPawns = 0;
+                int countOfBishops = 0;
+                Chessman lastPawn = null;
+                foreach (Chessman chessman in listOfChessmen)
+                {
+                    //frozen - mark as turned pawn
+                    if ((chessman.IsInGame()) && (chessman.GetFrozenState()))
+                    {
+                        switch (chessman.GetChessmanName())
+                        {
+                            case ChessmenNames.Bishop:
+                                countOfBishops++;
+                                break;
+                            case ChessmenNames.Queen:
+                                countOfQueens++;
+                                break;
+                            case ChessmenNames.PawnOfBishop:
+                                countOfPawns++;
+                                lastPawn = chessman;
+                                break;
+                            case ChessmenNames.PawnOfKnight:
+                                countOfPawns++;
+                                lastPawn = chessman;
+                                break;
+                            case ChessmenNames.PawnOfQueen:
+                                countOfPawns++;
+                                lastPawn = chessman;
+                                break;
+                            case ChessmenNames.PawnOfTower:
+                                countOfPawns++;
+                                lastPawn = chessman;
+                                break;
+                            default: 
+                                break;
+                        }
+                    }
+                }
+                //true if priority pawn
+                if ((countOfPawns == 1) &&
+                    (((countOfBishops <= 1) && (countOfQueens == 0)) ||
+                    ((countOfBishops == 0) && (countOfQueens <= 1))))
+                {
+                    if (lastPawn != null)
+                        lastPawn.SetPriorityState(true);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             public void SetCheckState(bool state)
@@ -584,6 +676,16 @@ namespace EnochianChess
             public void SetSurrendingState(bool surrending)
             {
                 IsSurrender = surrending;
+            }
+
+            public void PawnIsDead()
+            {
+                enableTurningPawns = true;
+            }
+
+            public bool CanPawnTurn()
+            {
+                return enableTurningPawns;
             }
 
             public void AddLostChessman(Chessman chessman)
@@ -642,8 +744,8 @@ namespace EnochianChess
                 }
                 takenChessmenPic.Refresh();
             }
-
         }
+
         //dopilit'
         //GAME
         public class Game
@@ -722,8 +824,6 @@ namespace EnochianChess
                         " Согласие на это должны дать оба оставшихся игрока.\n Оба игрока согласны на обмен пленными?", "Обмен пленными", MessageBoxButtons.YesNo))
                 {
                     //dopilit'
-
-
                     prisonersChangeButton.Enabled = false;
                 }
             }
@@ -983,6 +1083,7 @@ namespace EnochianChess
         //CHESSMAN
         public abstract class Chessman
         {
+            protected ChessmenParameters creatingState;
             protected Bitmap imageOfChessman;
             //position
             protected int horizontal, vertical;
@@ -994,6 +1095,8 @@ namespace EnochianChess
             protected bool isInGame;
 
             protected bool isPossibleToMove;
+
+            protected bool isPriority;
 
             //chessman is frozen after surrending of player or losing king
             protected bool isFrozen;
@@ -1015,6 +1118,7 @@ namespace EnochianChess
 
             public Chessman(ChessmenParameters chessmanParameter, Chessboard chessboard)
             {
+                creatingState = chessmanParameter;
                 this.engName = chessmanParameter.engName;
                 this.horizontal = chessmanParameter.horizontal;
                 this.vertical = chessmanParameter.vertical;
@@ -1029,8 +1133,16 @@ namespace EnochianChess
                 this.isFrozen = false;
                 this.ruAttack = chessmanParameter.ruAttack;
                 this.ruMove = chessmanParameter.ruMove;
+                isPriority = false;
                 ownerObject = chessboard.GetPlayerObject(player);
                 ownerObject.AddChessman(this);
+            }
+
+            public ChessmenParameters GetChessmanParametres()
+            {
+                creatingState.horizontal = this.horizontal;
+                creatingState.vertical = this.vertical;
+                return creatingState;
             }
 
             //graphics
@@ -1111,17 +1223,24 @@ namespace EnochianChess
 
             public abstract bool IsThatPossibleMove(int horizontal, int vertical);
 
-            public virtual void MoveChessman(int horizontal, int vertical)
+            public virtual void MoveChessman(int horizontal, int vertical, bool logged)
             {
-                string turnList = GetNameOfChessmanRussianNominative();
-                turnList += " " + chessboard.GetHorizontalChar(9 - this.horizontal) + " : " + (9 - this.vertical).ToString();
-                turnList += " " + ruMove + ' ';
-                turnList += " " + chessboard.GetHorizontalChar(9 - horizontal) + " : " + (9 - vertical).ToString();
+                string turnList = "";
+                if (logged)
+                {
+                    turnList = GetNameOfChessmanRussianNominative();
+                    turnList += " " + chessboard.GetHorizontalChar(9 - this.horizontal) + " : " + (9 - this.vertical).ToString();
+                    turnList += " " + ruMove + ' ';
+                    turnList += " " + chessboard.GetHorizontalChar(9 - horizontal) + " : " + (9 - vertical).ToString();
+                }
                 chessboard.MakeThisCellUsual(this.horizontal, this.vertical);
                 this.horizontal = horizontal;
                 this.vertical = vertical;
-                turnList += '\n';
-                chessboard.SendLogToGame(turnList, true);
+                if (logged)
+                {
+                    turnList += '\n';
+                    chessboard.SendLogToGame(turnList, true);
+                }
                 chessboard.DrawChessman(this);
             }
 
@@ -1198,7 +1317,21 @@ namespace EnochianChess
                 return ((canMove) || (canAttack));
             }
 
-            
+            //only for pawns
+            public void SetPriorityState(bool state)
+            {
+                isPriority = state;
+            }
+
+            public bool IsPriority()
+            {
+                return isPriority;
+            }
+
+            public virtual bool IsReadyToTurn()
+            {
+                return false;
+            }
         }
 
         //KING
@@ -1275,13 +1408,26 @@ namespace EnochianChess
                 return result;
             }
 
-            public override void MoveChessman(int horizontal, int vertical)
+            public override void MoveChessman(int horizontal, int vertical, bool logged)
             {
+                string turnList = "";
+                if (logged)
+                {
+                    turnList = GetNameOfChessmanRussianNominative();
+                    turnList += " " + chessboard.GetHorizontalChar(9 - this.horizontal) + " : " + (9 - this.vertical).ToString();
+                    turnList += " " + ruMove + ' ';
+                    turnList += " " + chessboard.GetHorizontalChar(9 - horizontal) + " : " + (9 - vertical).ToString();
+                }
                 chessboard.MakeThisCellUsual(this.graphHorizontal, this.graphVertical);
                 this.horizontal = horizontal;
                 this.vertical = vertical;
                 graphHorizontal = horizontal;
                 graphVertical = vertical;
+                if (logged)
+                {
+                    turnList += '\n';
+                    chessboard.SendLogToGame(turnList, true);
+                }
                 chessboard.DrawChessman(this);
             }
 
@@ -2297,6 +2443,17 @@ namespace EnochianChess
                 return result;
             }
 
+            public override bool IsReadyToTurn()
+            {
+                return (vertical == 8);
+            }
+
+            public override void Dying()
+            {
+                base.Dying();
+                ownerObject.PawnIsDead();
+            }
+
         }
 
         //RED PAWN
@@ -2401,6 +2558,17 @@ namespace EnochianChess
                     }
                 }
                 return result;
+            }
+
+            public override bool IsReadyToTurn()
+            {
+                return (vertical == 1);
+            }
+
+            public override void Dying()
+            {
+                base.Dying();
+                ownerObject.PawnIsDead();
             }
         }
 
@@ -2507,6 +2675,17 @@ namespace EnochianChess
                 }
                 return result;
             }
+
+            public override bool IsReadyToTurn()
+            {
+                return (horizontal == 1);
+            }
+
+            public override void Dying()
+            {
+                base.Dying();
+                ownerObject.PawnIsDead();
+            }
         }
 
         //BLACK PAWN
@@ -2612,6 +2791,17 @@ namespace EnochianChess
                     }
                 }
                 return result;
+            }
+
+            public override bool IsReadyToTurn()
+            {
+                return (horizontal == 8);
+            }
+
+            public override void Dying()
+            {
+                base.Dying();
+                ownerObject.PawnIsDead();
             }
         }
 
@@ -2739,6 +2929,21 @@ namespace EnochianChess
                 return result;
             }
 
+            private void TurnPawn(ChessmenNames typeOfChessman, int numberInCurrentState)
+            {
+                string log = currentState[numberInCurrentState].GetNameOfChessmanRussianNominative() + " превращается в ";
+                Point oldCoordinates = currentState[numberInCurrentState].GetCoordinates();
+                Point redrawCoordinates = new Point();
+                Chessman turningChessman = chessmenInfo.CreateNewChessman(currentState[numberInCurrentState].GetChessmanOwner().ToString(), typeOfChessman.ToString(), this);
+                redrawCoordinates = turningChessman.GetCoordinates();
+                game.GetPlayerObject(turningChessman.GetChessmanOwner()).DeleteChessman(currentState[numberInCurrentState]);
+                currentState[numberInCurrentState] = turningChessman;
+                currentState[numberInCurrentState].MoveChessman(oldCoordinates.X, oldCoordinates.Y, false);
+                log += currentState[numberInCurrentState].GetNameOfChessmanRussianAccusative();
+                ShowChessboard(chessboardPicturebox);
+                game.AddStringToLog(log + "\n",false);
+            }
+
             //Analyse after each turn
             public void TurnAnalyse()
             {
@@ -2748,8 +2953,109 @@ namespace EnochianChess
                 //end of game analys (not win maybe)
                 //jujube (pat) for player (wtf that word)
 
-
+                AnalysePawns();
                 AnalyseKings();
+            }
+
+            private const Point redThrone = new Point(8, 8);
+            private const Point yellowThrone = new Point(1, 1);
+            private const Point blueThrone = new Point(1, 8);
+            private const Point blackThrone = new Point(8, 1);
+
+            private void AnalyseThrones()
+            {
+                if ((GetChessmanOnCoordinates(yellowThrone.X, yellowThrone.Y).GetChessmanName() == ChessmenNames.King) &&
+                    (GetChessmanOnCoordinates(yellowThrone.X, yellowThrone.Y).GetChessmanOwner() == Players.Red))
+                {
+                    game.GetPlayerObject(Players.Yellow).SetController(Players.Red);
+                    //dopilit'
+                    //if on yellow throne sit red king
+                }
+                if ((GetChessmanOnCoordinates(redThrone.X, redThrone.Y).GetChessmanName() == ChessmenNames.King) &&
+                    (GetChessmanOnCoordinates(redThrone.X, redThrone.Y).GetChessmanOwner() == Players.Yellow))
+                {
+                    //if on red throne sit yellow king
+                }
+                if ((GetChessmanOnCoordinates(blueThrone.X, blueThrone.Y).GetChessmanName() == ChessmenNames.King) &&
+                    (GetChessmanOnCoordinates(blueThrone.X, blueThrone.Y).GetChessmanOwner() == Players.Black))
+                {
+                    //if on blue throne sit black king
+                }
+                if ((GetChessmanOnCoordinates(blackThrone.X, blackThrone.Y).GetChessmanName() == ChessmenNames.King) &&
+                    (GetChessmanOnCoordinates(blackThrone.X, blackThrone.Y).GetChessmanOwner() == Players.Blue))
+                {
+                    //if on black throne sit blue king
+                }
+            }
+
+            private void AnalysePawns()
+            {
+                bool redPriority = game.GetPlayerObject(Players.Red).PriorityPawn();
+                bool yellowPriority = game.GetPlayerObject(Players.Yellow).PriorityPawn();
+                bool bluePriority = game.GetPlayerObject(Players.Blue).PriorityPawn();
+                bool blackPriority = game.GetPlayerObject(Players.Black).PriorityPawn();
+                for (int i = 0; i < COUNT_OF_CHESSMEN; i++)
+                {
+                    if (!currentState[i].GetFrozenState())
+                    {
+                        ChessmenParameters param = currentState[i].GetChessmanParametres();
+                        switch (param.kindOfChessman)
+                        {
+                            case ChessmenNames.PawnOfBishop:
+                                if (currentState[i].IsReadyToTurn())
+                                {
+                                    if (currentState[i].IsPriority())
+                                    {
+                                        //dopilit'
+                                        /**/
+                                    }
+                                    else
+                                    {
+                                        TurnPawn(ChessmenNames.Bishop, i);
+                                    }
+                                }
+                                break;
+                            case ChessmenNames.PawnOfKnight:
+                                if (currentState[i].IsReadyToTurn())
+                                {
+                                    if (currentState[i].IsPriority())
+                                    {
+                                    }
+                                    else
+                                    {
+                                        TurnPawn(ChessmenNames.Knight, i);
+                                    }
+                                }
+                                break;
+                            case ChessmenNames.PawnOfQueen:
+                                if (currentState[i].IsReadyToTurn())
+                                {
+                                    if (currentState[i].IsPriority())
+                                    {
+                                    }
+                                    else
+                                    {
+                                        TurnPawn(ChessmenNames.Queen, i);
+                                    }
+                                }
+                                break;
+                            case ChessmenNames.PawnOfTower:
+                                if (currentState[i].IsReadyToTurn())
+                                {
+                                    if (currentState[i].IsPriority())
+                                    {
+                                    }
+                                    else
+                                    {
+                                        TurnPawn(ChessmenNames.Tower, i);
+                                    }
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
             }
 
             //Analyse for check
@@ -3174,7 +3480,7 @@ namespace EnochianChess
                             selectedChessman.ShowPossibleAttacks(true);
                             if (selectedChessman.IsThatPossibleMove(horizontal, vertical))
                             {
-                                selectedChessman.MoveChessman(horizontal, vertical);
+                                selectedChessman.MoveChessman(horizontal, vertical, true);
                                 TurnAnalyse();
                                 //turn happened
                                 game.ToggleTurn();
